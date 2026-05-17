@@ -31,9 +31,7 @@ private:
     std::thread m_io_thread;
     std::atomic<bool> m_running{false};
 
-    std::shared_ptr<IQueue> m_pending_queue;
-    std::unique_ptr<builder::PendingFeed> m_builder_pending_feed;
-    std::unique_ptr<builder::RestClient> m_builder_rest_client;
+    std::unique_ptr<candidate::CandidateSource> m_candidate_source;
 };
 
 } // namespace runtime

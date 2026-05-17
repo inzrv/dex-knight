@@ -1,9 +1,7 @@
 #pragma once
 
+#include "candidate/candidate_source.h"
 #include "common/config.h"
-#include "common/queue.h"
-#include "builder/rest_client.h"
-#include "builder/pending_feed.h"
 
 #include <boost/asio/io_context.hpp>
 
@@ -14,9 +12,7 @@ namespace runtime
 
 struct RuntimeComponents
 {
-    std::shared_ptr<IQueue> pending_queue;
-    std::unique_ptr<builder::PendingFeed> builder_pending_feed;
-    std::unique_ptr<builder::RestClient> builder_rest_client;
+    std::unique_ptr<candidate::CandidateSource> candidate_source;
 };
 
 class RuntimeFactory final
