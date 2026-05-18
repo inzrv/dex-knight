@@ -1,5 +1,6 @@
 #pragma once
 
+#include "errors.h"
 #include "builder/pending_feed.h"
 #include "builder/rest_client.h"
 #include "common/config.h"
@@ -8,6 +9,7 @@
 
 #include <boost/asio.hpp>
 
+#include <expected>
 #include <memory>
 #include <mutex>
 
@@ -29,6 +31,7 @@ public:
 
 private:
     void run() override;
+    std::expected<void, Error> run_core_loop();
 
 private:
     Config m_config;

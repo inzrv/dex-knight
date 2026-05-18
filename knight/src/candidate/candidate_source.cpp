@@ -46,10 +46,20 @@ void CandidateSource::run()
 
     log::info("CandidateSource", "builder pending feed ready");
 
+    const auto loop_res = run_core_loop();
+    if (!loop_res) {
+        log::error("CandidateSource", "core loop error: {}", error_to_string(loop_res.error()));
+    } 
+}
+
+std::expected<void, Error> CandidateSource::run_core_loop()
+{
     std::unique_lock lock{m_mutex};
     m_cv.wait(lock, [this] {
         return !m_running;
     });
+
+    return {};
 }
 
 } // namespace candidate
