@@ -26,7 +26,7 @@ public:
 
     PendingFeed(Config config,
                 net::io_context& io_ctx,
-                std::shared_ptr<IQueue<InputEnvelope>> queue);
+                std::shared_ptr<IQueue<Event>> queue);
 
     void open();
     void close();
@@ -45,7 +45,7 @@ private:
 private:
     Config m_config;
     net::io_context& m_io_ctx;
-    std::shared_ptr<IQueue<InputEnvelope>> m_queue;
+    std::shared_ptr<IQueue<Event>> m_queue;
     std::unique_ptr<network::WsSource> m_ws_source;
 
     mutable std::mutex m_state_mutex;

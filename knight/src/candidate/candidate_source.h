@@ -4,6 +4,7 @@
 #include "builder/pending_feed.h"
 #include "builder/rest_client.h"
 #include "common/config.h"
+#include "common/event.h"
 #include "common/queue.h"
 #include "common/worker.h"
 
@@ -37,7 +38,7 @@ private:
     Config m_config;
     net::io_context& m_io_ctx;
 
-    std::shared_ptr<IQueue<InputEnvelope>> m_pending_queue;
+    std::shared_ptr<IQueue<Event>> m_pending_queue;
     std::unique_ptr<builder::RestClient> m_builder_rest_client;
     std::unique_ptr<builder::PendingFeed> m_pending_feed;
 };

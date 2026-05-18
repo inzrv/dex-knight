@@ -9,7 +9,7 @@ namespace builder
 
 PendingFeed::PendingFeed(Config config,
                          net::io_context& io_ctx,
-                         std::shared_ptr<IQueue<InputEnvelope>> queue)
+                         std::shared_ptr<IQueue<Event>> queue)
     : m_config(std::move(config))
     , m_io_ctx(io_ctx)
     , m_queue(std::move(queue))

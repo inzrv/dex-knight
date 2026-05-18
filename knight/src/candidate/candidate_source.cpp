@@ -4,7 +4,9 @@
 #include "common/log.h"
 
 #include <chrono>
+#include <type_traits>
 #include <utility>
+#include <variant>
 
 namespace candidate
 {
@@ -12,7 +14,7 @@ namespace candidate
 CandidateSource::CandidateSource(Config config, net::io_context& io_ctx)
     : m_config(std::move(config))
     , m_io_ctx(io_ctx)
-    , m_pending_queue(std::make_shared<Queue<InputEnvelope, 10'000>>())
+    , m_pending_queue(std::make_shared<Queue<Event, 10'000>>())
     , m_builder_rest_client(std::make_unique<builder::RestClient>(m_config, m_io_ctx))
     , m_pending_feed(std::make_unique<builder::PendingFeed>(
         m_config,
@@ -54,12 +56,23 @@ void CandidateSource::run()
 
 std::expected<void, Error> CandidateSource::run_core_loop()
 {
-    std::unique_lock lock{m_mutex};
-    m_cv.wait(lock, [this] {
-        return !m_running;
-    });
+    for (;;) {
+        auto event = m_pending_queue->wait_pop();
+        if (!event) {
+            log::info("CandidateSource", "event queue closed");
+            return {};
+        }
 
-    return {};
+        std::visit([](const auto& item) {
+            using EventType = std::decay_t<decltype(item)>;
+
+            if constexpr (std::is_same_v<EventType, PendingTxEvent>) {
+                log::info("CandidateSource", "pending tx payload: {}", item.payload);
+            } else if constexpr (std::is_same_v<EventType, NewBlockEvent>) {
+                log::info("CandidateSource", "new block event: source={} block_number={}", item.source, item.block_number);
+            }
+        }, *event);
+    }
 }
 
 } // namespace candidate

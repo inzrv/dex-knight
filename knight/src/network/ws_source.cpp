@@ -25,7 +25,7 @@ std::string ws_source_state_to_string(WsSource::State state)
 }
 
 WsSource::WsSource(net::io_context& io_ctx,
-                   std::shared_ptr<IQueue<InputEnvelope>> queue,
+                   std::shared_ptr<IQueue<Event>> queue,
                    bool use_tls,
                    bool verify_tls_peer,
                    std::string host,
@@ -325,11 +325,11 @@ void WsSource::publish_message(std::string payload)
         return;
     }
 
-    const bool pushed = m_queue->try_push(InputEnvelope{
+    const bool pushed = m_queue->try_push(Event{PendingTxEvent{
         .ingress_time = latency_clock::now(),
         .source = m_host,
         .payload = std::move(payload)
-    });
+    }});
 
     if (!pushed && m_on_drop) {
         m_on_drop();
