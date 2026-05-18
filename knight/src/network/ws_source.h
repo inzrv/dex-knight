@@ -42,7 +42,7 @@ public:
     using drop_handler_t = std::function<void()>;
 
     WsSource(net::io_context& io_ctx,
-             std::shared_ptr<IQueue> queue,
+             std::shared_ptr<IQueue<InputEnvelope>> queue,
              bool use_tls,
              bool verify_tls_peer,
              std::string host,
@@ -101,7 +101,7 @@ private:
     beast::flat_buffer m_buffer;
     net::steady_timer m_reconnect_timer;
 
-    std::shared_ptr<IQueue> m_queue;
+    std::shared_ptr<IQueue<InputEnvelope>> m_queue;
 
     bool m_use_tls{false};
     bool m_verify_tls_peer{true};

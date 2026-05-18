@@ -12,7 +12,7 @@ namespace candidate
 CandidateSource::CandidateSource(Config config, net::io_context& io_ctx)
     : m_config(std::move(config))
     , m_io_ctx(io_ctx)
-    , m_pending_queue(std::make_shared<Queue<10'000>>())
+    , m_pending_queue(std::make_shared<Queue<InputEnvelope, 10'000>>())
     , m_builder_rest_client(std::make_unique<builder::RestClient>(m_config, m_io_ctx))
     , m_pending_feed(std::make_unique<builder::PendingFeed>(
         m_config,
@@ -49,7 +49,7 @@ void CandidateSource::run()
     const auto loop_res = run_core_loop();
     if (!loop_res) {
         log::error("CandidateSource", "core loop error: {}", error_to_string(loop_res.error()));
-    } 
+    }
 }
 
 std::expected<void, Error> CandidateSource::run_core_loop()

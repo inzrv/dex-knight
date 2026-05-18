@@ -25,7 +25,7 @@ std::string ws_source_state_to_string(WsSource::State state)
 }
 
 WsSource::WsSource(net::io_context& io_ctx,
-                   std::shared_ptr<IQueue> queue,
+                   std::shared_ptr<IQueue<InputEnvelope>> queue,
                    bool use_tls,
                    bool verify_tls_peer,
                    std::string host,

@@ -37,7 +37,7 @@ private:
     Config m_config;
     net::io_context& m_io_ctx;
 
-    std::shared_ptr<IQueue> m_pending_queue;
+    std::shared_ptr<IQueue<InputEnvelope>> m_pending_queue;
     std::unique_ptr<builder::RestClient> m_builder_rest_client;
     std::unique_ptr<builder::PendingFeed> m_pending_feed;
 };
