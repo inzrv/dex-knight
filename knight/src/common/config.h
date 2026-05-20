@@ -12,7 +12,7 @@
 #include <system_error>
 #include <utility>
 
-struct WsEndpoint final
+struct Endpoint final
 {
     std::string scheme;
     std::string host;
@@ -25,18 +25,22 @@ struct Config final
 {
     bool from_json(const boost::json::object& json)
     {
+        const auto builder_rest_url_json = json_string(json, "builderRestUrl");
         const auto builder_ws_url_json = json_string(json, "builderWsUrl");
-        if (!builder_ws_url_json) {
+        if (!builder_rest_url_json || !builder_ws_url_json) {
             return false;
         }
 
-        const auto endpoint = parse_ws_endpoint(*builder_ws_url_json);
-        if (!endpoint) {
+        const auto rest_endpoint = parse_rest_endpoint(*builder_rest_url_json);
+        const auto ws_endpoint = parse_ws_endpoint(*builder_ws_url_json);
+        if (!rest_endpoint || !ws_endpoint) {
             return false;
         }
 
+        builder_rest_url = *builder_rest_url_json;
+        builder_rest_endpoint = *rest_endpoint;
         builder_ws_url = *builder_ws_url_json;
-        builder_ws_endpoint = *endpoint;
+        builder_ws_endpoint = *ws_endpoint;
         tls_verify_peer = json_bool(json, "tlsVerifyPeer").value_or(true);
         return true;
     }
@@ -51,8 +55,10 @@ struct Config final
         return from_json(*parse_to_json_res);
     }
 
+    std::string builder_rest_url;
+    Endpoint builder_rest_endpoint;
     std::string builder_ws_url;
-    WsEndpoint builder_ws_endpoint;
+    Endpoint builder_ws_endpoint;
     bool tls_verify_peer{true};
 
 private:
@@ -88,7 +94,7 @@ private:
         return ec == std::errc{} && ptr == end && value > 0;
     }
 
-    static std::optional<SchemeInfo> parse_scheme(std::string_view scheme_raw)
+    static std::optional<SchemeInfo> parse_ws_scheme(std::string_view scheme_raw)
     {
         auto scheme = to_lower(std::string(scheme_raw));
         if (scheme == "ws") {
@@ -100,6 +106,28 @@ private:
         }
 
         if (scheme == "wss") {
+            return SchemeInfo{
+                .scheme = std::move(scheme),
+                .default_port = "443",
+                .use_tls = true,
+            };
+        }
+
+        return std::nullopt;
+    }
+
+    static std::optional<SchemeInfo> parse_rest_scheme(std::string_view scheme_raw)
+    {
+        auto scheme = to_lower(std::string(scheme_raw));
+        if (scheme == "http") {
+            return SchemeInfo{
+                .scheme = std::move(scheme),
+                .default_port = "80",
+                .use_tls = false,
+            };
+        }
+
+        if (scheme == "https") {
             return SchemeInfo{
                 .scheme = std::move(scheme),
                 .default_port = "443",
@@ -154,15 +182,10 @@ private:
         };
     }
 
-    static std::optional<WsEndpoint> parse_ws_endpoint(std::string_view url)
+    static std::optional<Endpoint> parse_endpoint(std::string_view url, const SchemeInfo& scheme)
     {
         const auto scheme_end = url.find("://");
-        if (scheme_end == std::string_view::npos) {
-            return std::nullopt;
-        }
-
-        auto scheme = parse_scheme(url.substr(0, scheme_end));
-        if (!scheme) {
+        if (scheme_end == std::string_view::npos || to_lower(std::string(url.substr(0, scheme_end))) != scheme.scheme) {
             return std::nullopt;
         }
 
@@ -171,17 +194,47 @@ private:
             return std::nullopt;
         }
 
-        auto host_port = parse_host_port(parts->authority, scheme->default_port);
+        auto host_port = parse_host_port(parts->authority, scheme.default_port);
         if (!host_port) {
             return std::nullopt;
         }
 
-        return WsEndpoint{
-            .scheme = std::move(scheme->scheme),
+        return Endpoint{
+            .scheme = scheme.scheme,
             .host = std::move(host_port->host),
             .port = std::move(host_port->port),
             .target = std::move(parts->target),
-            .use_tls = scheme->use_tls,
+            .use_tls = scheme.use_tls,
         };
+    }
+
+    static std::optional<Endpoint> parse_ws_endpoint(std::string_view url)
+    {
+        const auto scheme_end = url.find("://");
+        if (scheme_end == std::string_view::npos) {
+            return std::nullopt;
+        }
+
+        auto scheme = parse_ws_scheme(url.substr(0, scheme_end));
+        if (!scheme) {
+            return std::nullopt;
+        }
+
+        return parse_endpoint(url, *scheme);
+    }
+
+    static std::optional<Endpoint> parse_rest_endpoint(std::string_view url)
+    {
+        const auto scheme_end = url.find("://");
+        if (scheme_end == std::string_view::npos) {
+            return std::nullopt;
+        }
+
+        auto scheme = parse_rest_scheme(url.substr(0, scheme_end));
+        if (!scheme) {
+            return std::nullopt;
+        }
+
+        return parse_endpoint(url, *scheme);
     }
 };

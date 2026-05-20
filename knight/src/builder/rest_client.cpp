@@ -11,7 +11,7 @@ namespace builder
 RestClient::RestClient(Config config, net::io_context& io_ctx)
     : m_config(std::move(config))
 {
-    const auto& endpoint = m_config.builder_ws_endpoint;
+    const auto& endpoint = m_config.builder_rest_endpoint;
     m_rest_client = std::make_unique<network::RestClient>(
         io_ctx,
         endpoint.use_tls,
