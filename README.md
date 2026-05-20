@@ -116,6 +116,12 @@ Check public mempool sequence numbers and snapshot boundaries:
 scenarios/mempool-sequence/run.zsh
 ```
 
+Check that a single public self-transfer bundle produces exactly one block with one transaction:
+
+```shell
+scenarios/single-bundle-tx/run.zsh
+```
+
 ## More Detail
 
 - `blockchain/README.md` - Dark Forest local chain, contracts, deployment output, and
