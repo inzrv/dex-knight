@@ -41,6 +41,7 @@ public:
 private:
     void on_ws_state(network::WsSource::State state);
     void on_ws_error(beast::error_code ec, std::string_view where);
+    void set_state(State state);
 
 private:
     Config m_config;

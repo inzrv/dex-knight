@@ -1,6 +1,7 @@
 #pragma once
 
 #include "errors.h"
+#include "candidate/block_syncer.h"
 #include "builder/pending_feed.h"
 #include "builder/rest_client.h"
 #include "common/config.h"
@@ -32,6 +33,7 @@ public:
 
 private:
     void run() override;
+    void stop_inputs();
     std::expected<void, Error> run_core_loop();
 
 private:
@@ -41,6 +43,7 @@ private:
     std::shared_ptr<IQueue<Event>> m_pending_queue;
     std::unique_ptr<builder::RestClient> m_builder_rest_client;
     std::unique_ptr<builder::PendingFeed> m_pending_feed;
+    std::unique_ptr<BlockSyncer> m_block_syncer;
 };
 
 } // namespace candidate

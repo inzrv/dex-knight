@@ -65,32 +65,37 @@ void PendingFeed::reopen()
 
 void PendingFeed::on_ws_state(network::WsSource::State state)
 {
-    std::lock_guard lock{m_state_mutex};
     log::info("PendingFeed", "websocket state: {}", ws_source_state_to_string(state));
     switch (state) {
         case network::WsSource::State::STOPPED:
-            m_state = State::CLOSED;
+            set_state(State::CLOSED);
             break;
         case network::WsSource::State::STARTING:
             break;
         case network::WsSource::State::RUNNING:
-            m_state = State::OPEN;
+            set_state(State::OPEN);
             break;
         case network::WsSource::State::STOPPING:
             break;
         case network::WsSource::State::FAILED:
-            m_state = State::FAILED;
+            set_state(State::FAILED);
             break;
     }
-
-    m_state_cv.notify_all();
 }
 
 void PendingFeed::on_ws_error(beast::error_code ec, std::string_view where)
 {
     log::error("PendingFeed", "websocket error: {} {}", where, ec.message());
-    std::lock_guard lock{m_state_mutex};
-    m_state = State::FAILED;
+    set_state(State::FAILED);
+}
+
+void PendingFeed::set_state(State state)
+{
+    {
+        std::lock_guard lock{m_state_mutex};
+        m_state = state;
+    }
+
     m_state_cv.notify_all();
 }
 

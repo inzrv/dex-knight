@@ -20,6 +20,10 @@ CandidateSource::CandidateSource(Config config, net::io_context& io_ctx)
         m_config,
         m_io_ctx,
         m_pending_queue))
+    , m_block_syncer(std::make_unique<BlockSyncer>(
+        m_config,
+        m_io_ctx,
+        m_pending_queue))
 {}
 
 CandidateSource::~CandidateSource()
@@ -29,20 +33,39 @@ CandidateSource::~CandidateSource()
 
 void CandidateSource::stop()
 {
-    m_pending_feed->close();
+    stop_inputs();
     m_pending_queue->close();
 
     Worker::stop();
 }
 
+void CandidateSource::stop_inputs()
+{
+    m_pending_feed->close();
+    m_block_syncer->stop();
+}
+
 void CandidateSource::run()
 {
+    log::info("CandidateSource", "starting block syncer");
+    m_block_syncer->start();
+
+    const auto block_sync_res = m_block_syncer->wait_until_ready(std::chrono::seconds{10});
+    if (!block_sync_res) {
+        log::error("CandidateSource", "failed to start block syncer: {}", candidate::error_to_string(block_sync_res.error()));
+        stop_inputs();
+        return;
+    }
+
+    log::info("CandidateSource", "block syncer ready");
+
     log::info("CandidateSource", "starting builder pending feed");
     m_pending_feed->open();
 
     const auto wait_res = m_pending_feed->wait_until_ready(std::chrono::seconds{10});
     if (!wait_res) {
         log::error("CandidateSource", "failed to open builder pending feed: {}", builder::error_to_string(wait_res.error()));
+        stop_inputs();
         return;
     }
 

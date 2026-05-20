@@ -22,37 +22,50 @@ RestClient::RestClient(Config config, net::io_context& io_ctx)
 
 std::expected<std::string, Error> RestClient::request_snapshot() const
 {
+    return get_with_retry(kPendingSnapshotTarget, "pending snapshot");
+}
+
+std::expected<std::string, Error> RestClient::request_chain_head() const
+{
+    return get_with_retry(kChainHeadTarget, "chain head");
+}
+
+std::expected<std::string, Error> RestClient::get_with_retry(std::string_view target, std::string_view label) const
+{
     auto last_error = network::RestError::UNKNOWN_ERROR;
 
-    for (int attempt = 1; attempt <= kSnapshotMaxAttempts; ++attempt) {
+    for (int attempt = 1; attempt <= kMaxAttempts; ++attempt) {
         log::debug("BuilderRestClient",
-                   "requesting pending snapshot {} (attempt {}/{})",
-                   kPendingSnapshotTarget,
+                   "requesting {} {} (attempt {}/{})",
+                   label,
+                   target,
                    attempt,
-                   kSnapshotMaxAttempts);
+                   kMaxAttempts);
 
-        const auto res = m_rest_client->get(kPendingSnapshotTarget);
+        const auto res = m_rest_client->get(target);
         if (res) {
-            log::debug("BuilderRestClient", "pending snapshot request succeeded");
+            log::debug("BuilderRestClient", "{} request succeeded", label);
             return *res;
         }
 
         last_error = res.error();
-        if (attempt == kSnapshotMaxAttempts) {
+        if (attempt == kMaxAttempts) {
             break;
         }
 
-        const auto backoff = kSnapshotBaseBackoff * (1 << (attempt - 1));
+        const auto backoff = kBaseBackoff * (1 << (attempt - 1));
         log::warn("BuilderRestClient",
-                  "pending snapshot request failed: {}, retrying in {} ms",
+                  "{} request failed: {}, retrying in {} ms",
+                  label,
                   network::error_to_string(res.error()),
                   backoff.count());
         std::this_thread::sleep_for(backoff);
     }
 
     log::error("BuilderRestClient",
-               "pending snapshot request failed after {} attempts: {}",
-               kSnapshotMaxAttempts,
+               "{} request failed after {} attempts: {}",
+               label,
+               kMaxAttempts,
                network::error_to_string(last_error));
     return std::unexpected(Error::REQUEST_ERROR);
 }

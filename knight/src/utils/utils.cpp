@@ -4,6 +4,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/system/error_code.hpp>
 
+#include <charconv>
+#include <system_error>
+
 std::optional<boost::json::value> parse_to_json(std::string_view s)
 {
     boost::json::value json_value;
@@ -65,6 +68,24 @@ std::optional<uint64_t> json_uint64(const boost::json::object& object, std::stri
     }
 
     return static_cast<uint64_t>(*value);
+}
+
+std::optional<uint64_t> parse_hex_quantity(std::string_view value)
+{
+    if (value.size() <= 2 || value[0] != '0' || (value[1] != 'x' && value[1] != 'X')) {
+        return std::nullopt;
+    }
+
+    uint64_t parsed = 0;
+    const auto digits = value.substr(2);
+    const auto* begin = digits.data();
+    const auto* end = digits.data() + digits.size();
+    const auto [ptr, ec] = std::from_chars(begin, end, parsed, 16);
+    if (ec != std::errc{} || ptr != end) {
+        return std::nullopt;
+    }
+
+    return parsed;
 }
 
 const boost::json::array* json_array(const boost::json::object& object, std::string_view field) noexcept
