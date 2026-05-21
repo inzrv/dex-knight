@@ -25,28 +25,26 @@ std::string ws_source_state_to_string(WsSource::State state)
 }
 
 WsSource::WsSource(net::io_context& io_ctx,
-                   std::shared_ptr<IQueue<Event>> queue,
                    bool use_tls,
                    bool verify_tls_peer,
                    std::string host,
                    std::string port,
                    std::string target,
+                   message_handler_t on_message,
                    error_handler_t on_error,
-                   state_handler_t on_state,
-                   drop_handler_t on_drop)
+                   state_handler_t on_state)
     : m_io_ctx(io_ctx)
     , m_resolver(net::make_strand(io_ctx))
     , m_ssl_context(ssl::context::tls_client)
     , m_reconnect_timer(io_ctx)
-    , m_queue(std::move(queue))
     , m_use_tls(use_tls)
     , m_verify_tls_peer(verify_tls_peer)
     , m_host(std::move(host))
     , m_port(std::move(port))
     , m_target(std::move(target))
+    , m_on_message(std::move(on_message))
     , m_on_error(std::move(on_error))
     , m_on_state(std::move(on_state))
-    , m_on_drop(std::move(on_drop))
 {
     if (m_use_tls) {
         beast::error_code ec;
@@ -321,18 +319,8 @@ void WsSource::on_close(beast::error_code ec)
 
 void WsSource::publish_message(std::string payload)
 {
-    if (!m_queue) {
-        return;
-    }
-
-    const bool pushed = m_queue->try_push(Event{PendingTxEvent{
-        .ingress_time = latency_clock::now(),
-        .source = m_host,
-        .payload = std::move(payload)
-    }});
-
-    if (!pushed && m_on_drop) {
-        m_on_drop();
+    if (m_on_message) {
+        m_on_message(std::move(payload));
     }
 }
 

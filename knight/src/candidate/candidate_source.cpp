@@ -2,9 +2,10 @@
 
 #include "builder/errors.h"
 #include "common/log.h"
+#include "utils/utils.h"
 
 #include <chrono>
-#include <type_traits>
+#include <string>
 #include <utility>
 #include <variant>
 
@@ -86,16 +87,76 @@ std::expected<void, Error> CandidateSource::run_core_loop()
             return {};
         }
 
-        std::visit([](const auto& item) {
-            using EventType = std::decay_t<decltype(item)>;
+        if (auto* pending_tx = std::get_if<PendingTxEvent>(&*event)) {
+            handle_pending_tx_event(std::move(*pending_tx));
+            continue;
+        }
 
-            if constexpr (std::is_same_v<EventType, PendingTxEvent>) {
-                log::info("CandidateSource", "pending tx payload: {}", item.payload);
-            } else if constexpr (std::is_same_v<EventType, NewBlockEvent>) {
-                log::info("CandidateSource", "new block event: source={} block_number={}", item.source, item.block_number);
-            }
-        }, *event);
+        if (const auto* new_block = std::get_if<NewBlockEvent>(&*event)) {
+            handle_new_block_event(*new_block);
+            continue;
+        }
     }
 }
+
+void CandidateSource::handle_new_block_event(const NewBlockEvent& event)
+{
+    log::info("CandidateSource", "new block event: source={} block_number={}", event.source, event.block_number);
+
+    const auto snapshot_res = m_builder_rest_client->request_snapshot();
+    if (!snapshot_res) {
+        log::warn("CandidateSource", "failed to request pending snapshot: {}", builder::error_to_string(snapshot_res.error()));
+        return;
+    }
+
+    const auto snapshot_json = parse_to_json_object(*snapshot_res);
+    if (!snapshot_json) {
+        log::warn("CandidateSource", "failed to parse pending snapshot json");
+        return;
+    }
+
+    auto snapshot = MempoolSnapshot::from_json(*snapshot_json, event.block_number);
+    if (!snapshot) {
+        log::warn("CandidateSource", "failed to parse pending snapshot");
+        return;
+    }
+
+    const auto snapshot_seq = snapshot->snapshot_seq;
+    const auto candidate_count = snapshot->candidates.size();
+    const bool applied = m_local_mempool.apply_snapshot(std::move(*snapshot));
+    if (!applied) {
+        const auto current_block = m_local_mempool.block_number();
+        const auto current_block_text = current_block ? std::to_string(*current_block) : std::string{"none"};
+        log::debug("CandidateSource",
+                   "ignored stale pending snapshot: block_number={} snapshot_seq={} current_block_number={} current_snapshot_seq={}",
+                   event.block_number,
+                   snapshot_seq,
+                   current_block_text,
+                   m_local_mempool.snapshot_seq());
+        return;
+    }
+
+    log::info("CandidateSource",
+              "pending snapshot applied: block_number={} snapshot_seq={} candidates={}",
+              event.block_number,
+              snapshot_seq,
+              candidate_count);
+}
+
+void CandidateSource::handle_pending_tx_event(PendingTxEvent event)
+{
+    const auto seq_num = event.tx.seq_num;
+    const bool accepted = m_local_mempool.apply_pending_tx(std::move(event.tx));
+    if (!accepted) {
+        log::debug("CandidateSource",
+                   "ignored pending tx event covered by snapshot: seq_num={} snapshot_seq={}",
+                   seq_num,
+                   m_local_mempool.snapshot_seq());
+        return;
+    }
+
+    log::info("CandidateSource", "pending tx candidate accepted: seq_num={} candidates={}", seq_num, m_local_mempool.size());
+}
+
 
 } // namespace candidate

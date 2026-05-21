@@ -1,8 +1,5 @@
 #pragma once
 
-#include "common/event.h"
-#include "common/queue.h"
-
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/beast/core.hpp>
@@ -37,20 +34,19 @@ public:
         FAILED
     };
 
+    using message_handler_t = std::function<void(std::string)>;
     using error_handler_t = std::function<void(beast::error_code, std::string_view)>;
     using state_handler_t = std::function<void(State)>;
-    using drop_handler_t = std::function<void()>;
 
     WsSource(net::io_context& io_ctx,
-             std::shared_ptr<IQueue<Event>> queue,
              bool use_tls,
              bool verify_tls_peer,
              std::string host,
              std::string port,
              std::string target,
+             message_handler_t on_message = {},
              error_handler_t on_error = {},
-             state_handler_t on_state = {},
-             drop_handler_t on_drop = {});
+             state_handler_t on_state = {});
 
     void start();
     void stop();
@@ -101,8 +97,6 @@ private:
     beast::flat_buffer m_buffer;
     net::steady_timer m_reconnect_timer;
 
-    std::shared_ptr<IQueue<Event>> m_queue;
-
     bool m_use_tls{false};
     bool m_verify_tls_peer{true};
     std::string m_host;
@@ -113,9 +107,9 @@ private:
     bool m_restart_requested{false};
     size_t m_reconnect_attempts{0};
 
+    message_handler_t m_on_message;
     error_handler_t m_on_error;
     state_handler_t m_on_state;
-    drop_handler_t m_on_drop;
 
     static constexpr size_t kMaxReconnectAttempts{10};
     static constexpr std::chrono::milliseconds kReconnectBaseDelay{200};

@@ -2,6 +2,7 @@
 
 #include "errors.h"
 #include "candidate/block_syncer.h"
+#include "candidate/local_mempool.h"
 #include "builder/pending_feed.h"
 #include "builder/rest_client.h"
 #include "common/config.h"
@@ -13,7 +14,6 @@
 
 #include <expected>
 #include <memory>
-#include <mutex>
 
 namespace net = boost::asio;
 
@@ -35,6 +35,8 @@ private:
     void run() override;
     void stop_inputs();
     std::expected<void, Error> run_core_loop();
+    void handle_new_block_event(const NewBlockEvent& event);
+    void handle_pending_tx_event(PendingTxEvent event);
 
 private:
     Config m_config;
@@ -44,6 +46,7 @@ private:
     std::unique_ptr<builder::RestClient> m_builder_rest_client;
     std::unique_ptr<builder::PendingFeed> m_pending_feed;
     std::unique_ptr<BlockSyncer> m_block_syncer;
+    LocalMempool m_local_mempool;
 };
 
 } // namespace candidate

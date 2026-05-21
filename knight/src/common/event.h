@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/pending_tx.h"
 #include "time.h"
 
 #include <cstdint>
@@ -17,7 +18,7 @@ struct PendingTxEvent
 {
     latency_time_point ingress_time;
     std::string source;
-    std::string payload;
+    PendingTx tx;
 };
 
 using Event = std::variant<NewBlockEvent, PendingTxEvent>;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/config.h"
+#include "common/event.h"
 #include "common/queue.h"
 #include "builder/errors.h"
 #include "network/ws_source.h"
@@ -10,6 +11,8 @@
 #include <expected>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <string_view>
 
 namespace builder
 {
@@ -39,6 +42,7 @@ public:
     }
 
 private:
+    void on_ws_message(std::string payload);
     void on_ws_state(network::WsSource::State state);
     void on_ws_error(beast::error_code ec, std::string_view where);
     void set_state(State state);

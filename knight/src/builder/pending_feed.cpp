@@ -1,11 +1,34 @@
 #include "builder/pending_feed.h"
 
 #include "common/log.h"
+#include "utils/utils.h"
 
+#include <optional>
+#include <string_view>
 #include <utility>
 
 namespace builder
 {
+namespace
+{
+
+std::optional<PendingTx> parse_pending_tx_event(std::string_view payload)
+{
+    const auto json = parse_to_json_object(payload);
+    if (!json) {
+        return std::nullopt;
+    }
+
+    const auto event_type = json_string(*json, "type");
+    const auto* record = json->if_contains("record");
+    if (!event_type || *event_type != "pending_transaction" || record == nullptr) {
+        return std::nullopt;
+    }
+
+    return PendingTx::from_json(*record);
+}
+
+} // namespace
 
 PendingFeed::PendingFeed(Config config,
                          net::io_context& io_ctx,
@@ -19,20 +42,19 @@ PendingFeed::PendingFeed(Config config,
 
     m_ws_source = std::make_unique<network::WsSource>(
         m_io_ctx,
-        m_queue,
         endpoint.use_tls,
         m_config.tls_verify_peer,
         endpoint.host,
         endpoint.port,
         endpoint.target,
+        [this](std::string payload) {
+            on_ws_message(std::move(payload));
+        },
         [this](beast::error_code ec, std::string_view where) {
             on_ws_error(ec, where);
         },
         [this](network::WsSource::State state) {
             on_ws_state(state);
-        },
-        []() {
-            log::warn("PendingFeed", "drop queue overflow");
         }
     );
 }
@@ -61,6 +83,26 @@ void PendingFeed::reopen()
 {
     log::info("PendingFeed", "reopen requested");
     m_ws_source->restart();
+}
+
+void PendingFeed::on_ws_message(std::string payload)
+{
+    auto candidate = parse_pending_tx_event(payload);
+    if (!candidate) {
+        log::warn("PendingFeed", "failed to parse pending tx payload: {}", payload);
+        return;
+    }
+
+    const auto seq_num = candidate->seq_num;
+    const bool pushed = m_queue->try_push(Event{PendingTxEvent{
+        .ingress_time = latency_clock::now(),
+        .source = m_config.builder_ws_endpoint.host,
+        .tx = std::move(*candidate),
+    }});
+
+    if (!pushed) {
+        log::warn("PendingFeed", "drop pending tx event: seq_num={}", seq_num);
+    }
 }
 
 void PendingFeed::on_ws_state(network::WsSource::State state)
