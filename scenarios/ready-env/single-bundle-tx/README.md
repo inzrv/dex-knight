@@ -1,5 +1,11 @@
 # Single Bundle Transaction Scenario
 
+## Lifecycle
+
+- Group: `ready-env`.
+- Does not start, redeploy, or clean local services.
+- Prepare a clean environment with `scenarios/ready-env/bin/start-clean.zsh` and clean it with `scenarios/ready-env/bin/cleanup.zsh`.
+
 This scenario checks the smallest builder-controlled mining path: one public
 mempool transaction is included through one private bundle and produces exactly
 one new block with exactly one transaction.
@@ -20,5 +26,5 @@ It
 Run from the repository root:
 
 ```shell
-scenarios/single-bundle-tx/run.zsh
+scenarios/ready-env/single-bundle-tx/run.zsh
 ```

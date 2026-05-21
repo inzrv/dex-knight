@@ -1,5 +1,11 @@
 # Seed Pools Scenario
 
+## Lifecycle
+
+- Group: `repeatable`.
+- Can be run multiple times; each run adds another `100,000 TokenA` and `100,000 TokenB` to each pool.
+- Starts or reuses the local chain when needed.
+
 This scenario prepares both deployed AMM pools with equal `TokenA` / `TokenB`
 liquidity.
 
@@ -13,5 +19,5 @@ It
 Run from the repository root:
 
 ```shell
-scenarios/seed-pools/run.zsh
+scenarios/repeatable/seed-pools/run.zsh
 ```

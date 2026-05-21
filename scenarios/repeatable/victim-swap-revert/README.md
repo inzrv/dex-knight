@@ -1,5 +1,11 @@
 # Victim Swap Revert Scenario
 
+## Lifecycle
+
+- Group: `repeatable`.
+- Can be run multiple times because the swap is expected to revert and leave balances unchanged.
+- Starts or reuses the local chain and block builder when needed.
+
 This scenario checks that the pool reverts a victim swap whose `minAmountOut`
 is impossible to satisfy.
 
@@ -15,5 +21,5 @@ It
 Run from the repository root:
 
 ```shell
-scenarios/victim-swap-revert/run.zsh
+scenarios/repeatable/victim-swap-revert/run.zsh
 ```

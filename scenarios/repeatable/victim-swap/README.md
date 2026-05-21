@@ -1,5 +1,11 @@
 # Victim Swap Scenario
 
+## Lifecycle
+
+- Group: `repeatable`.
+- Can be run multiple times against the same local environment.
+- Starts or reuses the local chain and block builder when needed.
+
 This scenario checks a successful victim swap through the public mempool and a
 private bundle.
 
@@ -14,5 +20,5 @@ It
 Run from the repository root:
 
 ```shell
-scenarios/victim-swap/run.zsh
+scenarios/repeatable/victim-swap/run.zsh
 ```

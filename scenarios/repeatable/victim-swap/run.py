@@ -4,7 +4,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scenario_support import (  # noqa: E402
     ScenarioError,
@@ -70,14 +70,14 @@ def main() -> int:
     )
 
     quoted_amount_out = quote_amount_out_a_for_b(rpc_url, pool, SWAP_AMOUNT_A)
-    impossible_min_amount_out = quoted_amount_out + 1
-    print(f"Quoted TokenB out:      {format_token_amount(quoted_amount_out)}")
-    print(f"Impossible minimum out: {format_token_amount(impossible_min_amount_out)}")
+    min_amount_out = quoted_amount_out * 99 // 100
+    print(f"Quoted TokenB out:  {format_token_amount(quoted_amount_out)}")
+    print(f"Minimum TokenB out: {format_token_amount(min_amount_out)}")
 
     victim_a_before = token_balance(rpc_url, token_a, victim)
     victim_b_before = token_balance(rpc_url, token_b, victim)
 
-    print_step("Submitting impossible victim swap to the public mempool")
+    print_step("Submitting victim swap to the public mempool")
     mempool_record = submit_public_transaction(
         contract_transaction_payload(
             rpc_url,
@@ -86,13 +86,13 @@ def main() -> int:
             pool,
             "swapExactAForB(uint256,uint256)",
             str(SWAP_AMOUNT_A),
-            str(impossible_min_amount_out),
+            str(min_amount_out),
         )
     )
     mempool_tx_id = mempool_record["mempoolTxId"]
     print(f"Mempool transaction: {mempool_tx_id}")
 
-    print_step("Mining the impossible swap through the private bundle endpoint")
+    print_step("Mining the victim swap through the private bundle endpoint")
     bundle_result = mine_bundle([{"mempoolTxId": mempool_tx_id}])
     tx_result = bundle_result["transactions"][0]
     print(f"Bundle status:     {bundle_result['status']}")
@@ -102,27 +102,30 @@ def main() -> int:
     final_record = public_transaction(mempool_tx_id)
     victim_a_after = token_balance(rpc_url, token_a, victim)
     victim_b_after = token_balance(rpc_url, token_b, victim)
+    spent_a = victim_a_before - victim_a_after
+    received_b = victim_b_after - victim_b_before
 
-    print_step("Checking reverted swap state")
-    print(f"Final mempool status: {final_record['status']}")
+    print_step("Checking victim balances")
     print(f"Victim TokenA before: {format_token_amount(victim_a_before)}")
     print(f"Victim TokenA after:  {format_token_amount(victim_a_after)}")
     print(f"Victim TokenB before: {format_token_amount(victim_b_before)}")
     print(f"Victim TokenB after:  {format_token_amount(victim_b_after)}")
+    print(f"Victim spent TokenA:  {format_token_amount(spent_a)}")
+    print(f"Victim got TokenB:    {format_token_amount(received_b)}")
 
-    if bundle_result["status"] != "failed":
-        raise ScenarioError(f"expected failed bundle, got {bundle_result['status']}")
-    if tx_result["status"] != "reverted":
-        raise ScenarioError(f"expected reverted swap, got {tx_result['status']}")
-    if final_record["status"] != "reverted":
-        raise ScenarioError(f"expected reverted mempool record, got {final_record['status']}")
-    if victim_a_after != victim_a_before:
-        raise ScenarioError("victim TokenA balance changed after reverted swap")
-    if victim_b_after != victim_b_before:
-        raise ScenarioError("victim TokenB balance changed after reverted swap")
+    if bundle_result["status"] != "included":
+        raise ScenarioError(f"expected included bundle, got {bundle_result['status']}")
+    if tx_result["status"] != "included":
+        raise ScenarioError(f"expected included swap, got {tx_result['status']}")
+    if final_record["status"] != "included":
+        raise ScenarioError(f"expected included mempool record, got {final_record['status']}")
+    if spent_a != SWAP_AMOUNT_A:
+        raise ScenarioError(f"expected victim to spend {SWAP_AMOUNT_A} TokenA, got {spent_a}")
+    if received_b < min_amount_out:
+        raise ScenarioError(f"expected at least {min_amount_out} TokenB, got {received_b}")
 
     print_step("Scenario complete")
-    print("Impossible victim swap reverted and token balances stayed unchanged.")
+    print("Victim swap was mined and satisfied the minimum output.")
     return 0
 
 

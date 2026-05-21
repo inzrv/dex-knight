@@ -21,8 +21,7 @@ simulations, and backruns.
 - `services/block-builder/` - **Forest Gate**: local block builder service with
   public mempool, private bundle, simulation, and chain gateway APIs.
 - `knight/` - **Knight**: C++ arbitrage bot runtime.
-- `scenarios/` - integration scenarios that coordinate the chain and builder
-  while the arbitrage bot is being built.
+- `scenarios/` - integration scenarios grouped by environment lifecycle.
 
 ## Stack
 
@@ -78,54 +77,26 @@ knight/bin/cleanup-local.zsh
 
 ### Scenarios
 
-Run the smoke scenario:
+Scenarios are grouped by lifecycle. See `scenarios/README.md` for the full list.
+
+Run a repeatable smoke scenario:
 
 ```shell
-scenarios/token-transfer/run.zsh
+scenarios/repeatable/token-transfer/run.zsh
 ```
 
-The scenario starts or reuses the local chain and block builder, sends a `TokenA` transfer through the public mempool, mines it through a private bundle, and checks the final balance.
-
-Seed both AMM pools:
+Run the one-shot backrun scenario against a fresh environment:
 
 ```shell
-scenarios/seed-pools/run.zsh
+scenarios/one-shot/backrun/run.zsh
 ```
 
-Run a successful victim swap through the public mempool:
+Prepare a clean ready-env workspace, run a scenario that expects services to be running, then clean it up:
 
 ```shell
-scenarios/victim-swap/run.zsh
-```
-
-Run a victim swap that should revert on slippage:
-
-```shell
-scenarios/victim-swap-revert/run.zsh
-```
-
-Run a victim swap plus a simple backrun bundle:
-
-```shell
-scenarios/backrun/run.zsh
-```
-
-Check that bundle simulation returns receipts without changing chain state:
-
-```shell
-scenarios/bundle-simulation/run.zsh
-```
-
-Check public mempool sequence numbers and snapshot boundaries:
-
-```shell
-scenarios/mempool-sequence/run.zsh
-```
-
-Check that a single public self-transfer bundle produces exactly one block with one transaction:
-
-```shell
-scenarios/single-bundle-tx/run.zsh
+scenarios/ready-env/bin/start-clean.zsh
+scenarios/ready-env/single-bundle-tx/run.zsh
+scenarios/ready-env/bin/cleanup.zsh
 ```
 
 ## More Detail

@@ -1,5 +1,11 @@
 # Mempool Sequence Scenario
 
+## Lifecycle
+
+- Group: `repeatable`.
+- Can be run multiple times; it restarts the local block builder to reset the in-memory mempool.
+- Does not require contract deployment.
+
 This scenario checks that the local block builder assigns monotonic sequence
 numbers to public mempool transactions and exposes the same sequence boundary in
 `GET /public/pending`.
@@ -16,5 +22,5 @@ It
 Run from the repository root:
 
 ```shell
-scenarios/mempool-sequence/run.zsh
+scenarios/repeatable/mempool-sequence/run.zsh
 ```

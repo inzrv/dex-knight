@@ -1,5 +1,11 @@
 # Token Transfer Scenario
 
+## Lifecycle
+
+- Group: `repeatable`.
+- Can be run multiple times against the same local environment.
+- Starts or reuses the local chain and block builder when needed.
+
 This scenario is a smoke test for the local blockchain and block builder.
 
 It
@@ -14,5 +20,5 @@ It
 Run from the repository root:
 
 ```shell
-scenarios/token-transfer/run.zsh
+scenarios/repeatable/token-transfer/run.zsh
 ```

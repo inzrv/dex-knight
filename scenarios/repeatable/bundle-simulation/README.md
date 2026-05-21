@@ -1,5 +1,11 @@
 # Bundle Simulation Scenario
 
+## Lifecycle
+
+- Group: `repeatable`.
+- Can be run multiple times; it checks deltas and verifies simulation does not mutate chain state.
+- Starts or reuses the local chain and block builder when needed.
+
 This scenario checks that bundle simulation produces execution results without
 changing the real chain state.
 
@@ -15,5 +21,5 @@ It
 Run from the repository root:
 
 ```shell
-scenarios/bundle-simulation/run.zsh
+scenarios/repeatable/bundle-simulation/run.zsh
 ```
