@@ -1,8 +1,8 @@
 #include "runtime/runtime.h"
 
 #include "common/log.h"
+#include "candidate/errors.h"
 
-#include <chrono>
 #include <stdexcept>
 #include <thread>
 #include <utility>
@@ -61,7 +61,20 @@ void Runtime::stop()
 void Runtime::run_core_loop()
 {
     while (m_running) {
-        std::this_thread::sleep_for(std::chrono::milliseconds{200});
+        auto next_candidate = m_candidate_source->wait_pop_next_candidate();
+        if (!next_candidate) {
+            if (next_candidate.error() == candidate::Error::CLOSED) {
+                break;
+            }
+
+            log::warn("Runtime", "failed to receive candidate: {}", candidate::error_to_string(next_candidate.error()));
+            continue;
+        }
+
+        log::info("Runtime",
+                  "candidate received: mempool_tx_id={} seq_num={}",
+                  next_candidate->mempool_tx_id,
+                  next_candidate->seq_num);
     }
 
     log::info("Runtime", "core loop stopped");
