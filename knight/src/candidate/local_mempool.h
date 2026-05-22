@@ -1,7 +1,6 @@
 #pragma once
 
-#include "common/pending_tx.h"
-#include "candidate/mempool_snapshot.h"
+#include "builder/pending_snapshot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -15,9 +14,9 @@ namespace candidate
 class LocalMempool final
 {
 public:
-    bool apply_snapshot(MempoolSnapshot snapshot);
-    bool apply_pending_tx(PendingTx candidate);
-    std::optional<PendingTx> pop_next_candidate();
+    bool apply_snapshot(builder::PendingSnapshot snapshot);
+    bool apply_pending_tx(builder::PendingTransaction candidate);
+    std::optional<builder::PendingTransaction> pop_next_candidate();
 
     [[nodiscard]] size_t size() const;
     [[nodiscard]] uint64_t snapshot_seq() const;
@@ -25,7 +24,7 @@ public:
 
 private:
     mutable std::mutex m_mutex;
-    std::map<uint64_t, PendingTx> m_candidates;
+    std::map<uint64_t, builder::PendingTransaction> m_candidates;
     uint64_t m_snapshot_seq{0};
     // Block seen before requesting the snapshot; useful for simulation context,
     // but not an exact snapshot block because the request may be delayed.

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/types.h"
+
 #include <boost/json.hpp>
 
 #include <cstdint>
@@ -16,6 +18,15 @@ std::optional<bool> json_bool(const boost::json::object& object, std::string_vie
 std::optional<int64_t> json_int64(const boost::json::object& object, std::string_view field);
 std::optional<uint64_t> json_uint64(const boost::json::object& object, std::string_view field);
 std::optional<uint64_t> parse_hex_quantity(std::string_view value);
+std::optional<intx::uint256> parse_hex_uint256(std::string_view value);
+std::optional<bytes> parse_hex_bytes(std::string_view value);
+std::optional<uint64_t> json_hex_uint64(const boost::json::object& object, std::string_view field);
+std::optional<intx::uint256> json_hex_uint256(const boost::json::object& object, std::string_view field);
+std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field);
+std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field, size_t expected_size);
+std::optional<std::optional<uint64_t>> json_optional_hex_uint64(const boost::json::object& object, std::string_view field);
+std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(const boost::json::object& object, std::string_view field);
+std::optional<std::optional<bytes>> json_optional_hex_bytes(const boost::json::object& object, std::string_view field, size_t expected_size);
 const boost::json::array* json_array(const boost::json::object& object, std::string_view field) noexcept;
 const boost::json::object* json_object(const boost::json::object& object, std::string_view field) noexcept;
 

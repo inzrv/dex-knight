@@ -5,10 +5,10 @@
 namespace candidate
 {
 
-bool LocalMempool::apply_snapshot(MempoolSnapshot snapshot)
+bool LocalMempool::apply_snapshot(builder::PendingSnapshot snapshot)
 {
-    std::map<uint64_t, PendingTx> next_candidates;
-    for (auto& candidate : snapshot.candidates) {
+    std::map<uint64_t, builder::PendingTransaction> next_candidates;
+    for (auto& candidate : snapshot.transactions) {
         next_candidates[candidate.seq_num] = std::move(candidate);
     }
 
@@ -27,7 +27,7 @@ bool LocalMempool::apply_snapshot(MempoolSnapshot snapshot)
     return true;
 }
 
-bool LocalMempool::apply_pending_tx(PendingTx candidate)
+bool LocalMempool::apply_pending_tx(builder::PendingTransaction candidate)
 {
     std::lock_guard lock{m_mutex};
     if (candidate.seq_num <= m_snapshot_seq) {
@@ -38,7 +38,7 @@ bool LocalMempool::apply_pending_tx(PendingTx candidate)
     return true;
 }
 
-std::optional<PendingTx> LocalMempool::pop_next_candidate()
+std::optional<builder::PendingTransaction> LocalMempool::pop_next_candidate()
 {
     std::lock_guard lock{m_mutex};
     if (m_candidates.empty()) {

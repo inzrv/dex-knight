@@ -3,8 +3,6 @@
 #include "candidate/errors.h"
 #include "builder/rest_client.h"
 #include "common/config.h"
-#include "common/event.h"
-#include "common/queue.h"
 #include "common/worker.h"
 
 #include <boost/asio.hpp>
@@ -13,6 +11,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <expected>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -34,9 +33,11 @@ public:
         FAILED
     };
 
+    using new_block_handler_t = std::function<void(uint64_t)>;
+
     BlockSyncer(Config config,
                 net::io_context& io_ctx,
-                std::shared_ptr<IQueue<Event>> queue);
+                new_block_handler_t on_new_block);
     ~BlockSyncer() override;
 
     BlockSyncer(const BlockSyncer&) = delete;
@@ -59,7 +60,7 @@ private:
 private:
     std::optional<uint64_t> m_current_block;
     std::unique_ptr<builder::RestClient> m_builder_rest_client;
-    std::shared_ptr<IQueue<Event>> m_event_queue;
+    new_block_handler_t m_on_new_block;
 
     mutable std::mutex m_state_mutex;
     std::condition_variable m_state_cv;

@@ -1,14 +1,14 @@
 #pragma once
 
 #include "common/config.h"
-#include "common/event.h"
-#include "common/queue.h"
 #include "builder/errors.h"
+#include "builder/pending_transaction.h"
 #include "network/ws_source.h"
 
 #include <chrono>
 #include <condition_variable>
 #include <expected>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -27,9 +27,11 @@ public:
         FAILED
     };
 
+    using pending_transaction_handler_t = std::function<void(PendingTransaction)>;
+
     PendingFeed(Config config,
                 net::io_context& io_ctx,
-                std::shared_ptr<IQueue<Event>> queue);
+                pending_transaction_handler_t on_pending_transaction);
 
     void open();
     void close();
@@ -50,7 +52,7 @@ private:
 private:
     Config m_config;
     net::io_context& m_io_ctx;
-    std::shared_ptr<IQueue<Event>> m_queue;
+    pending_transaction_handler_t m_on_pending_transaction;
     std::unique_ptr<network::WsSource> m_ws_source;
 
     mutable std::mutex m_state_mutex;

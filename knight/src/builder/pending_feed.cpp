@@ -12,7 +12,7 @@ namespace builder
 namespace
 {
 
-std::optional<PendingTx> parse_pending_tx_event(std::string_view payload)
+std::optional<PendingTransaction> parse_pending_tx_event(std::string_view payload)
 {
     const auto json = parse_to_json_object(payload);
     if (!json) {
@@ -25,17 +25,17 @@ std::optional<PendingTx> parse_pending_tx_event(std::string_view payload)
         return std::nullopt;
     }
 
-    return PendingTx::from_json(*record);
+    return PendingTransaction::from_json(*record);
 }
 
 } // namespace
 
 PendingFeed::PendingFeed(Config config,
                          net::io_context& io_ctx,
-                         std::shared_ptr<IQueue<Event>> queue)
+                         pending_transaction_handler_t on_pending_transaction)
     : m_config(std::move(config))
     , m_io_ctx(io_ctx)
-    , m_queue(std::move(queue))
+    , m_on_pending_transaction(std::move(on_pending_transaction))
 {
     const auto& endpoint = m_config.builder_ws_endpoint;
     log::info("PendingFeed", "mempool stream endpoint: {}", m_config.builder_ws_url);
@@ -93,16 +93,12 @@ void PendingFeed::on_ws_message(std::string payload)
         return;
     }
 
-    const auto seq_num = candidate->seq_num;
-    const bool pushed = m_queue->try_push(Event{PendingTxEvent{
-        .ingress_time = latency_clock::now(),
-        .source = m_config.builder_ws_endpoint.host,
-        .tx = std::move(*candidate),
-    }});
-
-    if (!pushed) {
-        log::warn("PendingFeed", "drop pending tx event: seq_num={}", seq_num);
+    if (!m_on_pending_transaction) {
+        log::warn("PendingFeed", "drop pending tx because no handler is configured: seq_num={}", candidate->seq_num);
+        return;
     }
+
+    m_on_pending_transaction(std::move(*candidate));
 }
 
 void PendingFeed::on_ws_state(network::WsSource::State state)

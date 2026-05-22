@@ -20,11 +20,15 @@ CandidateSource::CandidateSource(Config config, net::io_context& io_ctx)
     , m_pending_feed(std::make_unique<builder::PendingFeed>(
         m_config,
         m_io_ctx,
-        m_pending_queue))
+        [this](builder::PendingTransaction transaction) {
+            publish_pending_transaction(std::move(transaction));
+        }))
     , m_block_syncer(std::make_unique<BlockSyncer>(
         m_config,
         m_io_ctx,
-        m_pending_queue))
+        [this](uint64_t block_number) {
+            publish_new_block(block_number);
+        }))
 {}
 
 CandidateSource::~CandidateSource()
@@ -87,7 +91,7 @@ std::expected<void, Error> CandidateSource::run_core_loop()
             return {};
         }
 
-        if (auto* pending_tx = std::get_if<PendingTxEvent>(&*event)) {
+        if (auto* pending_tx = std::get_if<PendingTransactionEvent>(&*event)) {
             handle_pending_tx_event(std::move(*pending_tx));
             continue;
         }
@@ -115,14 +119,14 @@ void CandidateSource::handle_new_block_event(const NewBlockEvent& event)
         return;
     }
 
-    auto snapshot = MempoolSnapshot::from_json(*snapshot_json, event.block_number);
+    auto snapshot = builder::PendingSnapshot::from_json(*snapshot_json, event.block_number);
     if (!snapshot) {
         log::warn("CandidateSource", "failed to parse pending snapshot");
         return;
     }
 
     const auto snapshot_seq = snapshot->snapshot_seq;
-    const auto candidate_count = snapshot->candidates.size();
+    const auto candidate_count = snapshot->transactions.size();
     const bool applied = m_local_mempool.apply_snapshot(std::move(*snapshot));
     if (!applied) {
         const auto current_block = m_local_mempool.block_number();
@@ -143,7 +147,7 @@ void CandidateSource::handle_new_block_event(const NewBlockEvent& event)
               candidate_count);
 }
 
-void CandidateSource::handle_pending_tx_event(PendingTxEvent event)
+void CandidateSource::handle_pending_tx_event(PendingTransactionEvent event)
 {
     const auto seq_num = event.tx.seq_num;
     const bool accepted = m_local_mempool.apply_pending_tx(std::move(event.tx));
@@ -158,5 +162,31 @@ void CandidateSource::handle_pending_tx_event(PendingTxEvent event)
     log::info("CandidateSource", "pending tx candidate accepted: seq_num={} candidates={}", seq_num, m_local_mempool.size());
 }
 
+void CandidateSource::publish_new_block(uint64_t block_number)
+{
+    const bool pushed = m_pending_queue->try_push(Event{NewBlockEvent{
+        .ingress_time = latency_clock::now(),
+        .source = "builder",
+        .block_number = block_number,
+    }});
+
+    if (!pushed) {
+        log::warn("CandidateSource", "drop new block event: block_number={}", block_number);
+    }
+}
+
+void CandidateSource::publish_pending_transaction(builder::PendingTransaction transaction)
+{
+    const auto seq_num = transaction.seq_num;
+    const bool pushed = m_pending_queue->try_push(Event{PendingTransactionEvent{
+        .ingress_time = latency_clock::now(),
+        .source = m_config.builder_ws_endpoint.host,
+        .tx = std::move(transaction),
+    }});
+
+    if (!pushed) {
+        log::warn("CandidateSource", "drop pending tx event: seq_num={}", seq_num);
+    }
+}
 
 } // namespace candidate

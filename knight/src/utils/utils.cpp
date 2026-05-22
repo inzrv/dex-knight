@@ -3,6 +3,7 @@
 #include <boost/json/src.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/system/error_code.hpp>
+#include <solabi/utils.h>
 
 #include <charconv>
 #include <system_error>
@@ -86,6 +87,117 @@ std::optional<uint64_t> parse_hex_quantity(std::string_view value)
     }
 
     return parsed;
+}
+
+std::optional<intx::uint256> parse_hex_uint256(std::string_view value)
+{
+    if (value.size() <= 2 || value[0] != '0' || (value[1] != 'x' && value[1] != 'X')) {
+        return std::nullopt;
+    }
+
+    try {
+        return intx::from_string<intx::uint256>(std::string{value});
+    } catch (const std::exception& /*e*/) {
+        return std::nullopt;
+    }
+}
+
+std::optional<bytes> parse_hex_bytes(std::string_view value)
+{
+    if (value.size() < 2 || value[0] != '0' || (value[1] != 'x' && value[1] != 'X')) {
+        return std::nullopt;
+    }
+
+    try {
+        return solabi::from_hex(value);
+    } catch (const std::exception& /*e*/) {
+        return std::nullopt;
+    }
+}
+
+std::optional<uint64_t> json_hex_uint64(const boost::json::object& object, std::string_view field)
+{
+    const auto raw = json_string(object, field);
+    if (!raw) {
+        return std::nullopt;
+    }
+
+    return parse_hex_quantity(*raw);
+}
+
+std::optional<intx::uint256> json_hex_uint256(const boost::json::object& object, std::string_view field)
+{
+    const auto raw = json_string(object, field);
+    if (!raw) {
+        return std::nullopt;
+    }
+
+    return parse_hex_uint256(*raw);
+}
+
+std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field)
+{
+    const auto raw = json_string(object, field);
+    if (!raw) {
+        return std::nullopt;
+    }
+
+    return parse_hex_bytes(*raw);
+}
+
+std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field, size_t expected_size)
+{
+    auto parsed = json_hex_bytes(object, field);
+    if (!parsed || parsed->size() != expected_size) {
+        return std::nullopt;
+    }
+
+    return parsed;
+}
+
+std::optional<std::optional<uint64_t>> json_optional_hex_uint64(const boost::json::object& object, std::string_view field)
+{
+    if (!object.if_contains(field) || object.at(field).is_null()) {
+        return std::optional<uint64_t>{};
+    }
+
+    auto parsed = json_hex_uint64(object, field);
+    if (!parsed) {
+        return std::nullopt;
+    }
+
+    return std::optional<uint64_t>{*parsed};
+}
+
+std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(const boost::json::object& object, std::string_view field)
+{
+    if (!object.if_contains(field) || object.at(field).is_null()) {
+        return std::optional<intx::uint256>{};
+    }
+
+    auto parsed = json_hex_uint256(object, field);
+    if (!parsed) {
+        return std::nullopt;
+    }
+
+    return std::optional<intx::uint256>{*parsed};
+}
+
+std::optional<std::optional<bytes>> json_optional_hex_bytes(
+    const boost::json::object& object,
+    std::string_view field,
+    size_t expected_size)
+{
+    if (!object.if_contains(field) || object.at(field).is_null()) {
+        return std::optional<bytes>{};
+    }
+
+    auto parsed = json_hex_bytes(object, field, expected_size);
+    if (!parsed) {
+        return std::nullopt;
+    }
+
+    return std::optional<bytes>{std::move(*parsed)};
 }
 
 const boost::json::array* json_array(const boost::json::object& object, std::string_view field) noexcept

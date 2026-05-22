@@ -6,12 +6,13 @@
 #include "builder/pending_feed.h"
 #include "builder/rest_client.h"
 #include "common/config.h"
-#include "common/event.h"
+#include "candidate/event.h"
 #include "common/queue.h"
 #include "common/worker.h"
 
 #include <boost/asio.hpp>
 
+#include <cstdint>
 #include <expected>
 #include <memory>
 
@@ -36,7 +37,9 @@ private:
     void stop_inputs();
     std::expected<void, Error> run_core_loop();
     void handle_new_block_event(const NewBlockEvent& event);
-    void handle_pending_tx_event(PendingTxEvent event);
+    void handle_pending_tx_event(PendingTransactionEvent event);
+    void publish_new_block(uint64_t block_number);
+    void publish_pending_transaction(builder::PendingTransaction transaction);
 
 private:
     Config m_config;

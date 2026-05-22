@@ -2,7 +2,6 @@
 
 #include "builder/errors.h"
 #include "common/log.h"
-#include "common/time.h"
 #include "utils/utils.h"
 
 #include <mutex>
@@ -13,9 +12,9 @@ namespace candidate
 
 BlockSyncer::BlockSyncer(Config config,
                          net::io_context& io_ctx,
-                         std::shared_ptr<IQueue<Event>> queue)
+                         new_block_handler_t on_new_block)
     : m_builder_rest_client(std::make_unique<builder::RestClient>(std::move(config), io_ctx))
-    , m_event_queue(std::move(queue))
+    , m_on_new_block(std::move(on_new_block))
 {}
 
 BlockSyncer::~BlockSyncer()
@@ -137,22 +136,13 @@ std::optional<uint64_t> BlockSyncer::fetch_last_block() const
 
 bool BlockSyncer::publish_new_block(uint64_t block_number)
 {
-    if (!m_event_queue) {
+    if (!m_on_new_block) {
+        log::warn("BlockSyncer", "drop new block because no handler is configured: block_number={}", block_number);
         return false;
     }
 
-    const bool pushed = m_event_queue->try_push(Event{NewBlockEvent{
-        .ingress_time = latency_clock::now(),
-        .source = "builder",
-        .block_number = block_number,
-    }});
-
-    if (!pushed) {
-        log::warn("BlockSyncer", "drop new block event: block_number={}", block_number);
-        return false;
-    }
-
-    log::info("BlockSyncer", "new block event published: block_number={}", block_number);
+    m_on_new_block(block_number);
+    log::info("BlockSyncer", "new block published: block_number={}", block_number);
     return true;
 }
 
