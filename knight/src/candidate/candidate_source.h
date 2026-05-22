@@ -31,6 +31,7 @@ public:
     CandidateSource& operator=(const CandidateSource&) = delete;
 
     void stop();
+    [[nodiscard]] std::expected<builder::PendingTransaction, Error> wait_pop_next_candidate();
 
 private:
     void run() override;

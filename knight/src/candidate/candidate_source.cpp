@@ -40,8 +40,14 @@ void CandidateSource::stop()
 {
     stop_inputs();
     m_pending_queue->close();
+    m_local_mempool.close();
 
     Worker::stop();
+}
+
+std::expected<builder::PendingTransaction, Error> CandidateSource::wait_pop_next_candidate()
+{
+    return m_local_mempool.wait_pop_next_candidate();
 }
 
 void CandidateSource::stop_inputs()
