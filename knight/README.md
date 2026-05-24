@@ -10,11 +10,18 @@ Knight is the C++ arbitrage bot runtime for DEX Knight. It is intentionally smal
 {
   "builderRestUrl": "http://127.0.0.1:9001",
   "builderWsUrl": "ws://127.0.0.1:9001/ws/pending",
-  "tlsVerifyPeer": true
+  "tlsVerifyPeer": true,
+  "pools": [
+    {
+      "address": "0x...",
+      "tokenA": "0x...",
+      "tokenB": "0x..."
+    }
+  ]
 }
 ```
 
-`builderRestUrl` points to the Forest Gate HTTP API. `builderWsUrl` points to the pending transaction stream. Use `http://`/`ws://` locally and `https://`/`wss://` for TLS endpoints. `tlsVerifyPeer` is optional and defaults to `true`.
+`builderRestUrl` points to the Forest Gate HTTP API. `builderWsUrl` points to the pending transaction stream. Use `http://`/`ws://` locally and `https://`/`wss://` for TLS endpoints. `tlsVerifyPeer` is optional and defaults to `true`. `pools` lists AMM pools watched by the candidate filter; only swap transactions sent to these addresses are delivered to the local mempool.
 
 ## Run With Local Scripts
 

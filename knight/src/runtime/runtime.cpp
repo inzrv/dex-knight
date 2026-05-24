@@ -1,6 +1,7 @@
 #include "runtime/runtime.h"
 
 #include "common/log.h"
+#include "candidate/candidate.h"
 #include "candidate/errors.h"
 
 #include <stdexcept>
@@ -72,9 +73,10 @@ void Runtime::run_core_loop()
         }
 
         log::info("Runtime",
-                  "candidate received: mempool_tx_id={} seq_num={}",
-                  next_candidate->mempool_tx_id,
-                  next_candidate->seq_num);
+                  "candidate received: mempool_tx_id={} seq_num={} swap_kind={}",
+                  next_candidate->tx.mempool_tx_id,
+                  next_candidate->tx.seq_num,
+                  candidate::swap_kind_to_string(next_candidate->swap_kind));
     }
 
     log::info("Runtime", "core loop stopped");

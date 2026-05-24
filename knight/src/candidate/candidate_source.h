@@ -2,6 +2,7 @@
 
 #include "errors.h"
 #include "candidate/block_syncer.h"
+#include "candidate/candidate_filter.h"
 #include "candidate/local_mempool.h"
 #include "builder/pending_feed.h"
 #include "builder/rest_client.h"
@@ -31,7 +32,7 @@ public:
     CandidateSource& operator=(const CandidateSource&) = delete;
 
     void stop();
-    [[nodiscard]] std::expected<builder::PendingTransaction, Error> wait_pop_next_candidate();
+    [[nodiscard]] std::expected<Candidate, Error> wait_pop_next_candidate();
 
 private:
     void run() override;
@@ -50,6 +51,7 @@ private:
     std::unique_ptr<builder::RestClient> m_builder_rest_client;
     std::unique_ptr<builder::PendingFeed> m_pending_feed;
     std::unique_ptr<BlockSyncer> m_block_syncer;
+    CandidateFilter m_candidate_filter;
     LocalMempool m_local_mempool;
 };
 

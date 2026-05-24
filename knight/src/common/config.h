@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/types.h"
 #include "utils/utils.h"
 
 #include <boost/json.hpp>
@@ -11,6 +12,7 @@
 #include <string_view>
 #include <system_error>
 #include <utility>
+#include <vector>
 
 struct Endpoint final
 {
@@ -19,6 +21,13 @@ struct Endpoint final
     std::string port;
     std::string target;
     bool use_tls{false};
+};
+
+struct PoolConfig final
+{
+    bytes address;
+    bytes token_a;
+    bytes token_b;
 };
 
 struct Config final
@@ -37,10 +46,16 @@ struct Config final
             return false;
         }
 
+        auto parsed_pools = parse_pools(json);
+        if (!parsed_pools) {
+            return false;
+        }
+
         builder_rest_url = *builder_rest_url_json;
         builder_rest_endpoint = *rest_endpoint;
         builder_ws_url = *builder_ws_url_json;
         builder_ws_endpoint = *ws_endpoint;
+        pools = std::move(*parsed_pools);
         tls_verify_peer = json_bool(json, "tlsVerifyPeer").value_or(true);
         return true;
     }
@@ -60,6 +75,7 @@ struct Config final
     std::string builder_ws_url;
     Endpoint builder_ws_endpoint;
     bool tls_verify_peer{true};
+    std::vector<PoolConfig> pools;
 
 private:
     struct SchemeInfo final
@@ -92,6 +108,49 @@ private:
         const auto* end = port.data() + port.size();
         const auto [ptr, ec] = std::from_chars(begin, end, value);
         return ec == std::errc{} && ptr == end && value > 0;
+    }
+
+
+    static std::optional<PoolConfig> parse_pool(const boost::json::object& json)
+    {
+        auto address = json_hex_bytes(json, "address", ADDRESS_LENGTH);
+        auto token_a = json_hex_bytes(json, "tokenA", ADDRESS_LENGTH);
+        auto token_b = json_hex_bytes(json, "tokenB", ADDRESS_LENGTH);
+        if (!address || !token_a || !token_b) {
+            return std::nullopt;
+        }
+
+        return PoolConfig{
+            .address = std::move(*address),
+            .token_a = std::move(*token_a),
+            .token_b = std::move(*token_b),
+        };
+    }
+
+    static std::optional<std::vector<PoolConfig>> parse_pools(const boost::json::object& json)
+    {
+        const auto* pools_json = json_array(json, "pools");
+        if (pools_json == nullptr) {
+            return std::vector<PoolConfig>{};
+        }
+
+        std::vector<PoolConfig> pools;
+        pools.reserve(pools_json->size());
+
+        for (const auto& value : *pools_json) {
+            if (!value.is_object()) {
+                return std::nullopt;
+            }
+
+            auto pool = parse_pool(value.as_object());
+            if (!pool) {
+                return std::nullopt;
+            }
+
+            pools.push_back(std::move(*pool));
+        }
+
+        return pools;
     }
 
     static std::optional<SchemeInfo> parse_ws_scheme(std::string_view scheme_raw)

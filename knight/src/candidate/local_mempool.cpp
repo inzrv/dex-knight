@@ -5,11 +5,11 @@
 namespace candidate
 {
 
-bool LocalMempool::apply_snapshot(builder::PendingSnapshot snapshot)
+bool LocalMempool::apply_snapshot(CandidateSnapshot snapshot)
 {
-    std::map<uint64_t, builder::PendingTransaction> next_candidates;
-    for (auto& candidate : snapshot.transactions) {
-        next_candidates[candidate.seq_num] = std::move(candidate);
+    std::map<uint64_t, Candidate> next_candidates;
+    for (auto& candidate : snapshot.candidates) {
+        next_candidates.insert_or_assign(candidate.tx.seq_num, std::move(candidate));
     }
 
     {
@@ -35,28 +35,28 @@ bool LocalMempool::apply_snapshot(builder::PendingSnapshot snapshot)
     return true;
 }
 
-bool LocalMempool::apply_pending_tx(builder::PendingTransaction candidate)
+bool LocalMempool::apply_pending_tx(Candidate candidate)
 {
     {
         std::lock_guard lock{m_mutex};
-        if (m_closed || candidate.seq_num <= m_snapshot_seq) {
+        if (m_closed || candidate.tx.seq_num <= m_snapshot_seq) {
             return false;
         }
 
-        m_candidates[candidate.seq_num] = std::move(candidate);
+        m_candidates.insert_or_assign(candidate.tx.seq_num, std::move(candidate));
     }
 
     m_cv.notify_one();
     return true;
 }
 
-std::optional<builder::PendingTransaction> LocalMempool::try_pop_next_candidate()
+std::optional<Candidate> LocalMempool::try_pop_next_candidate()
 {
     std::lock_guard lock{m_mutex};
     return pop_next_candidate_locked();
 }
 
-std::expected<builder::PendingTransaction, Error> LocalMempool::wait_pop_next_candidate()
+std::expected<Candidate, Error> LocalMempool::wait_pop_next_candidate()
 {
     std::unique_lock lock{m_mutex};
     m_cv.wait(lock, [this] {
@@ -81,7 +81,7 @@ void LocalMempool::close()
     m_cv.notify_all();
 }
 
-std::optional<builder::PendingTransaction> LocalMempool::pop_next_candidate_locked()
+std::optional<Candidate> LocalMempool::pop_next_candidate_locked()
 {
     if (m_candidates.empty()) {
         return std::nullopt;

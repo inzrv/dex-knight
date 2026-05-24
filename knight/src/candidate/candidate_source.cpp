@@ -8,9 +8,26 @@
 #include <string>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace candidate
 {
+namespace
+{
+
+std::vector<evm::Pool> make_pools(const std::vector<PoolConfig>& pools)
+{
+    std::vector<evm::Pool> result;
+    result.reserve(pools.size());
+
+    for (const auto& pool : pools) {
+        result.emplace_back(pool.address, pool.token_a, pool.token_b);
+    }
+
+    return result;
+}
+
+} // namespace
 
 CandidateSource::CandidateSource(Config config, net::io_context& io_ctx)
     : m_config(std::move(config))
@@ -29,6 +46,7 @@ CandidateSource::CandidateSource(Config config, net::io_context& io_ctx)
         [this](uint64_t block_number) {
             publish_new_block(block_number);
         }))
+    , m_candidate_filter(make_pools(m_config.pools))
 {}
 
 CandidateSource::~CandidateSource()
@@ -45,7 +63,7 @@ void CandidateSource::stop()
     Worker::stop();
 }
 
-std::expected<builder::PendingTransaction, Error> CandidateSource::wait_pop_next_candidate()
+std::expected<Candidate, Error> CandidateSource::wait_pop_next_candidate()
 {
     return m_local_mempool.wait_pop_next_candidate();
 }
@@ -131,9 +149,10 @@ void CandidateSource::handle_new_block_event(const NewBlockEvent& event)
         return;
     }
 
-    const auto snapshot_seq = snapshot->snapshot_seq;
-    const auto candidate_count = snapshot->transactions.size();
-    const bool applied = m_local_mempool.apply_snapshot(std::move(*snapshot));
+    auto candidate_snapshot = m_candidate_filter.filter_snapshot(std::move(*snapshot));
+    const auto snapshot_seq = candidate_snapshot.snapshot_seq;
+    const auto candidate_count = candidate_snapshot.candidates.size();
+    const bool applied = m_local_mempool.apply_snapshot(std::move(candidate_snapshot));
     if (!applied) {
         const auto current_block = m_local_mempool.block_number();
         const auto current_block_text = current_block ? std::to_string(*current_block) : std::string{"none"};
@@ -156,7 +175,13 @@ void CandidateSource::handle_new_block_event(const NewBlockEvent& event)
 void CandidateSource::handle_pending_tx_event(PendingTransactionEvent event)
 {
     const auto seq_num = event.tx.seq_num;
-    const bool accepted = m_local_mempool.apply_pending_tx(std::move(event.tx));
+    auto candidate = m_candidate_filter.filter(std::move(event.tx));
+    if (!candidate) {
+        log::debug("CandidateSource", "ignored pending tx event outside filter: seq_num={}", seq_num);
+        return;
+    }
+
+    const bool accepted = m_local_mempool.apply_pending_tx(std::move(*candidate));
     if (!accepted) {
         log::debug("CandidateSource",
                    "ignored pending tx event covered by snapshot: seq_num={} snapshot_seq={}",
