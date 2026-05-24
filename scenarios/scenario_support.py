@@ -105,6 +105,14 @@ def block_number(head: dict[str, Any]) -> int:
     return int(block_number_hex, 16)
 
 
+# Reads a block by number from the local chain.
+def block_by_number(rpc_url: str, number: int, include_transactions: bool) -> dict[str, Any]:
+    block = rpc(rpc_url, "eth_getBlockByNumber", [hex(number), include_transactions])
+    if not isinstance(block, dict):
+        raise ScenarioError(f"block {number} not found")
+    return block
+
+
 # Formats a chain head response for scenario output.
 def chain_head_label(head: dict[str, Any]) -> str:
     block_hash = head.get("blockHash")
@@ -112,6 +120,48 @@ def chain_head_label(head: dict[str, Any]) -> str:
         block_hash = "<missing>"
 
     return f"{block_number(head)} ({block_hash})"
+
+
+# Requires an already deployed and running local chain without starting services.
+def require_running_deployment() -> dict[str, Any]:
+    if not DEPLOYMENT_FILE.exists():
+        raise ScenarioError(
+            f"deployment file does not exist: {DEPLOYMENT_FILE}; run scenarios/ready-env/bin/start-clean.zsh first"
+        )
+
+    deployment = read_json(DEPLOYMENT_FILE)
+    rpc_url = deployment.get("rpcUrl")
+    if not isinstance(rpc_url, str) or rpc_url == "":
+        raise ScenarioError("deployment does not contain rpcUrl")
+
+    if not rpc_is_ready(rpc_url):
+        raise ScenarioError(f"local chain RPC is not reachable at {rpc_url}")
+
+    return deployment
+
+
+# Requires Anvil automine to be disabled so the builder controls block production.
+def require_builder_controlled_mining(rpc_url: str) -> None:
+    automine = rpc(rpc_url, "anvil_getAutomine", [])
+    if automine is not False:
+        raise ScenarioError(
+            "local chain automine must be disabled so the block builder controls mining"
+        )
+
+
+# Extracts pending transaction records from a public mempool snapshot.
+def pending_records(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
+    transactions = snapshot.get("transactions")
+    if not isinstance(transactions, list):
+        raise ScenarioError("pending snapshot does not contain transactions list")
+
+    records: list[dict[str, Any]] = []
+    for transaction in transactions:
+        if not isinstance(transaction, dict):
+            raise ScenarioError("pending snapshot contains a non-object transaction record")
+        records.append(transaction)
+
+    return records
 
 
 # Reads an ERC-20 token balance from the local chain.

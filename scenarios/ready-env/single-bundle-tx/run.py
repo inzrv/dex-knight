@@ -11,6 +11,7 @@ from scenario_support import (  # noqa: E402
     DEPLOYMENT_FILE,
     ScenarioError,
     account_nonce,
+    block_by_number,
     block_number,
     chain_head,
     chain_head_label,
@@ -19,9 +20,8 @@ from scenario_support import (  # noqa: E402
     print_step,
     public_transaction,
     public_transaction_payload,
-    read_json,
-    rpc,
-    rpc_is_ready,
+    require_builder_controlled_mining,
+    require_running_deployment,
     submit_public_transaction,
     wait_for_builder,
 )
@@ -88,38 +88,6 @@ def main() -> int:
     print_step("Scenario complete")
     print("One public self-transfer was included in one bundle and produced exactly one block transaction.")
     return 0
-
-
-def require_running_deployment() -> dict[str, Any]:
-    if not DEPLOYMENT_FILE.exists():
-        raise ScenarioError(
-            f"deployment file does not exist: {DEPLOYMENT_FILE}; run blockchain/bin/deploy-local.zsh first"
-        )
-
-    deployment = read_json(DEPLOYMENT_FILE)
-    rpc_url = deployment.get("rpcUrl")
-    if not isinstance(rpc_url, str) or rpc_url == "":
-        raise ScenarioError("deployment does not contain rpcUrl")
-
-    if not rpc_is_ready(rpc_url):
-        raise ScenarioError(f"local chain RPC is not reachable at {rpc_url}")
-
-    return deployment
-
-
-def require_builder_controlled_mining(rpc_url: str) -> None:
-    automine = rpc(rpc_url, "anvil_getAutomine", [])
-    if automine is not False:
-        raise ScenarioError(
-            "local chain automine must be disabled so the block builder creates exactly one block"
-        )
-
-
-def block_by_number(rpc_url: str, number: int, include_transactions: bool) -> dict[str, Any]:
-    block = rpc(rpc_url, "eth_getBlockByNumber", [hex(number), include_transactions])
-    if not isinstance(block, dict):
-        raise ScenarioError(f"block {number} not found")
-    return block
 
 
 def assert_single_block_single_tx(

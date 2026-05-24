@@ -29,6 +29,8 @@ scenarios/one-shot/backrun/run.zsh
 
 ```shell
 scenarios/ready-env/bin/start-clean.zsh
+scenarios/ready-env/victim-swap-pending/run.zsh
+scenarios/ready-env/flush-mempool/run.zsh
 scenarios/ready-env/single-bundle-tx/run.zsh
 scenarios/ready-env/bin/cleanup.zsh
 ```
