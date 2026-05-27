@@ -180,6 +180,23 @@ def token_balance(rpc_url: str, token: str, account: str) -> int:
     )
 
 
+# Reads an ERC-20 allowance from owner to spender.
+def token_allowance(rpc_url: str, token: str, owner: str, spender: str) -> int:
+    return cast_int(
+        [
+            "cast",
+            "call",
+            token,
+            "allowance(address,address)(uint256)",
+            owner,
+            spender,
+            "--rpc-url",
+            rpc_url,
+        ],
+        cwd=BLOCKCHAIN_DIR,
+    )
+
+
 # Formats an integer token amount using the default sandbox decimals.
 def format_token_amount(amount: int, decimals: int = DEFAULT_TOKEN_DECIMALS) -> str:
     scale = 10**decimals
@@ -391,6 +408,31 @@ def mint_token(
             token,
             "mint(address,uint256)",
             recipient,
+            str(amount),
+        )
+    finally:
+        if manage_automine:
+            rpc(rpc_url, "evm_setAutomine", [False])
+
+
+# Approves a spender to transfer a token from the owner.
+def approve_token(
+    rpc_url: str,
+    owner_key: str,
+    token: str,
+    spender: str,
+    amount: int,
+    manage_automine: bool = True,
+) -> None:
+    if manage_automine:
+        rpc(rpc_url, "evm_setAutomine", [True])
+    try:
+        send_contract_transaction(
+            rpc_url,
+            owner_key,
+            token,
+            "approve(address,uint256)",
+            spender,
             str(amount),
         )
     finally:
