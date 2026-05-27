@@ -26,6 +26,8 @@ struct Transaction
     std::optional<bytes> to;
 
     static std::optional<Transaction> from_json(const boost::json::value& value);
+
+    boost::json::object to_json() const;
 };
 
 } // namespace evm

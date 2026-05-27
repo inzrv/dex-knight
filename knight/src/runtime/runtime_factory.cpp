@@ -17,6 +17,7 @@ RuntimeComponents RuntimeFactory::create(boost::asio::io_context& io_ctx)
 
     RuntimeComponents components;
     components.candidate_source = std::make_unique<candidate::CandidateSource>(m_config, io_ctx);
+    components.simulator = std::make_unique<simulation::Simulator>(m_config, io_ctx);
 
     log::info("RuntimeFactory", "created all components");
     return components;

@@ -6,6 +6,7 @@
 #include <solabi/utils.h>
 
 #include <charconv>
+#include <string>
 #include <system_error>
 
 std::optional<boost::json::value> parse_to_json(std::string_view s)
@@ -115,6 +116,37 @@ std::optional<bytes> parse_hex_bytes(std::string_view value)
     }
 }
 
+std::string hex_quantity(uint64_t value)
+{
+    char buffer[18]{};
+    auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), value, 16);
+    if (ec != std::errc{}) {
+        return "0x0";
+    }
+
+    return "0x" + std::string(buffer, ptr);
+}
+
+std::string hex_quantity(const intx::uint256& value)
+{
+    return "0x" + intx::hex(value);
+}
+
+std::string hex_data(const bytes& value)
+{
+    static constexpr char kHexDigits[] = "0123456789abcdef";
+
+    std::string out;
+    out.reserve(2 + value.size() * 2);
+    out.append("0x");
+    for (const auto byte : value) {
+        out.push_back(kHexDigits[(byte >> 4) & 0x0f]);
+        out.push_back(kHexDigits[byte & 0x0f]);
+    }
+
+    return out;
+}
+
 std::optional<uint64_t> json_hex_uint64(const boost::json::object& object, std::string_view field)
 {
     const auto raw = json_string(object, field);
@@ -155,7 +187,9 @@ std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::stri
     return parsed;
 }
 
-std::optional<std::optional<uint64_t>> json_optional_hex_uint64(const boost::json::object& object, std::string_view field)
+std::optional<std::optional<uint64_t>> json_optional_hex_uint64(
+    const boost::json::object& object,
+    std::string_view field)
 {
     if (!object.if_contains(field) || object.at(field).is_null()) {
         return std::optional<uint64_t>{};
@@ -169,7 +203,9 @@ std::optional<std::optional<uint64_t>> json_optional_hex_uint64(const boost::jso
     return std::optional<uint64_t>{*parsed};
 }
 
-std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(const boost::json::object& object, std::string_view field)
+std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(
+    const boost::json::object& object,
+    std::string_view field)
 {
     if (!object.if_contains(field) || object.at(field).is_null()) {
         return std::optional<intx::uint256>{};

@@ -1,8 +1,9 @@
 #include "runtime/runtime.h"
 
-#include "common/log.h"
+#include "builder/errors.h"
 #include "candidate/candidate.h"
 #include "candidate/errors.h"
+#include "common/log.h"
 
 #include <stdexcept>
 #include <thread>
@@ -17,8 +18,9 @@ Runtime::Runtime(RuntimeFactory& factory)
 {
     auto components = factory.create(m_io_ctx);
     m_candidate_source = std::move(components.candidate_source);
+    m_simulator = std::move(components.simulator);
 
-    if (!m_candidate_source) {
+    if (!m_candidate_source || !m_simulator) {
         throw std::invalid_argument("runtime factory returned incomplete components");
     }
 
@@ -77,6 +79,14 @@ void Runtime::run_core_loop()
                   next_candidate->tx.mempool_tx_id,
                   next_candidate->tx.seq_num,
                   candidate::swap_kind_to_string(next_candidate->swap_kind));
+
+        auto simulation = m_simulator->simulate(*next_candidate);
+        if (!simulation) {
+            log::warn("Runtime", "candidate simulation failed: {}", builder::error_to_string(simulation.error()));
+            continue;
+        }
+
+        log::info("Runtime", "candidate simulation response: {}", *simulation);
     }
 
     log::info("Runtime", "core loop stopped");

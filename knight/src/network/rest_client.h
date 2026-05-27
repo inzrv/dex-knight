@@ -57,10 +57,13 @@ public:
                std::string port);
 
     std::expected<std::string, RestError> get(std::string_view target) const;
+    std::expected<std::string, RestError> post(std::string_view target, std::string_view body) const;
 
 private:
     std::expected<std::string, RestError> get_plain(std::string_view target) const;
     std::expected<std::string, RestError> get_tls(std::string_view target) const;
+    std::expected<std::string, RestError> post_plain(std::string_view target, std::string_view body) const;
+    std::expected<std::string, RestError> post_tls(std::string_view target, std::string_view body) const;
 
 private:
     net::io_context& m_io_ctx;

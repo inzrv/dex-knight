@@ -32,6 +32,7 @@ private:
     std::atomic<bool> m_running{false};
 
     std::unique_ptr<candidate::CandidateSource> m_candidate_source;
+    std::unique_ptr<simulation::Simulator> m_simulator;
 };
 
 } // namespace runtime

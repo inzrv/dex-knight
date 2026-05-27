@@ -4,11 +4,11 @@
 
 #include <boost/json.hpp>
 
+#include <chrono>
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <chrono>
 
 std::optional<boost::json::value> parse_to_json(std::string_view s);
 std::optional<boost::json::object> parse_to_json_object(std::string_view s);
@@ -20,13 +20,19 @@ std::optional<uint64_t> json_uint64(const boost::json::object& object, std::stri
 std::optional<uint64_t> parse_hex_quantity(std::string_view value);
 std::optional<intx::uint256> parse_hex_uint256(std::string_view value);
 std::optional<bytes> parse_hex_bytes(std::string_view value);
+std::string hex_quantity(uint64_t value);
+std::string hex_quantity(const intx::uint256& value);
+std::string hex_data(const bytes& value);
 std::optional<uint64_t> json_hex_uint64(const boost::json::object& object, std::string_view field);
 std::optional<intx::uint256> json_hex_uint256(const boost::json::object& object, std::string_view field);
 std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field);
 std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field, size_t expected_size);
 std::optional<std::optional<uint64_t>> json_optional_hex_uint64(const boost::json::object& object, std::string_view field);
 std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(const boost::json::object& object, std::string_view field);
-std::optional<std::optional<bytes>> json_optional_hex_bytes(const boost::json::object& object, std::string_view field, size_t expected_size);
+std::optional<std::optional<bytes>> json_optional_hex_bytes(
+    const boost::json::object& object,
+    std::string_view field,
+    size_t expected_size);
 const boost::json::array* json_array(const boost::json::object& object, std::string_view field) noexcept;
 const boost::json::object* json_object(const boost::json::object& object, std::string_view field) noexcept;
 

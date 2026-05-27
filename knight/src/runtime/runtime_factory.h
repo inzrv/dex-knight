@@ -2,6 +2,7 @@
 
 #include "candidate/candidate_source.h"
 #include "common/config.h"
+#include "simulation/simulator.h"
 
 #include <boost/asio/io_context.hpp>
 
@@ -13,6 +14,7 @@ namespace runtime
 struct RuntimeComponents
 {
     std::unique_ptr<candidate::CandidateSource> candidate_source;
+    std::unique_ptr<simulation::Simulator> simulator;
 };
 
 class RuntimeFactory final
