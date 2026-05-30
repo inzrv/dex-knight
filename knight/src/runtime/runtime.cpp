@@ -4,11 +4,13 @@
 #include "candidate/candidate.h"
 #include "candidate/errors.h"
 #include "common/log.h"
+#include "decoder/decoder.h"
 #include "utils/utils.h"
 
 #include <stdexcept>
 #include <thread>
 #include <utility>
+#include <variant>
 
 namespace runtime
 {
@@ -80,6 +82,20 @@ void Runtime::run_core_loop()
                   next_candidate->tx.mempool_tx_id,
                   next_candidate->tx.seq_num,
                   candidate::swap_kind_to_string(next_candidate->swap_kind));
+
+        auto swap = decoder::decode_swap(*next_candidate);
+        if (swap) {
+            std::visit([](const auto& s) {
+                log::info("Runtime",
+                          "candidate swap: amount_in={} min_amount_out={}",
+                          hex_quantity(s.amount_in),
+                          hex_quantity(s.min_amount_out));
+            }, *swap);
+        } else {
+            log::warn("Runtime",
+                      "candidate swap decode failed: mempool_tx_id={}",
+                      next_candidate->tx.mempool_tx_id);
+        }
 
         auto simulation = m_simulator->simulate(*next_candidate);
         if (!simulation) {
