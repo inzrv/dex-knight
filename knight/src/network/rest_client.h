@@ -28,6 +28,7 @@ enum class RestError
     HTTP_WRITE_ERROR,
     HTTP_READ_ERROR,
     BAD_STATUS,
+    CONFLICT,
     SHUTDOWN_ERROR
 };
 
@@ -41,6 +42,7 @@ inline std::string_view error_to_string(RestError error) noexcept
         case RestError::HTTP_WRITE_ERROR: return "HTTP_WRITE_ERROR";
         case RestError::HTTP_READ_ERROR: return "HTTP_READ_ERROR";
         case RestError::BAD_STATUS: return "BAD_STATUS";
+        case RestError::CONFLICT: return "CONFLICT";
         case RestError::SHUTDOWN_ERROR: return "SHUTDOWN_ERROR";
     }
 

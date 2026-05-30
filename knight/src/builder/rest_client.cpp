@@ -99,6 +99,10 @@ std::expected<std::string, Error> RestClient::post_with_retry(
             return *res;
         }
 
+        if (res.error() == network::RestError::CONFLICT) {
+            return std::unexpected(Error::CANDIDATE_NOT_PENDING);
+        }
+
         last_error = res.error();
         if (attempt == kMaxAttempts) {
             break;

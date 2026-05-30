@@ -211,8 +211,11 @@ std::expected<std::string, RestError> RestClient::post_plain(std::string_view ta
     }
 
     if (res.result() != http::status::ok) {
-        log::warn("RestClient", "bad status: {}", static_cast<int>(res.result()));
-        return std::unexpected(RestError::BAD_STATUS);
+        log::warn("RestClient", "status: {}", static_cast<int>(res.result()));
+        const auto error = res.result() == http::status::conflict
+            ? RestError::CONFLICT
+            : RestError::BAD_STATUS;
+        return std::unexpected(error);
     }
 
     stream.socket().shutdown(tcp::socket::shutdown_both, ec);
@@ -290,8 +293,11 @@ std::expected<std::string, RestError> RestClient::post_tls(std::string_view targ
     }
 
     if (res.result() != http::status::ok) {
-        log::warn("RestClient", "bad status: {}", static_cast<int>(res.result()));
-        return std::unexpected(RestError::BAD_STATUS);
+        log::warn("RestClient", "status: {}", static_cast<int>(res.result()));
+        const auto error = res.result() == http::status::conflict
+            ? RestError::CONFLICT
+            : RestError::BAD_STATUS;
+        return std::unexpected(error);
     }
 
     stream.shutdown(ec);

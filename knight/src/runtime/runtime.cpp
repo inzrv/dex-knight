@@ -83,7 +83,13 @@ void Runtime::run_core_loop()
 
         auto simulation = m_simulator->simulate(*next_candidate);
         if (!simulation) {
-            log::warn("Runtime", "candidate simulation failed: {}", builder::error_to_string(simulation.error()));
+            if (simulation.error() == builder::Error::CANDIDATE_NOT_PENDING) {
+                log::info("Runtime",
+                          "candidate simulation skipped: mempool_tx_id={} already mined or canceled",
+                          next_candidate->tx.mempool_tx_id);
+            } else {
+                log::warn("Runtime", "candidate simulation failed: {}", builder::error_to_string(simulation.error()));
+            }
             continue;
         }
 

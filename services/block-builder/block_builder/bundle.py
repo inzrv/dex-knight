@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from fastapi import HTTPException
+
 from .anvil import AnvilClient
 from .mempool import Mempool
 from .transaction import Transaction
@@ -25,8 +27,9 @@ class BundleItem:
                 raise ValueError(f"mempool transaction '{mempoolTxId}' not found")
 
             if record.status != "pending":
-                raise ValueError(
-                    f"mempool transaction '{mempoolTxId}' is '{record.status}', not 'pending'"
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"mempool transaction '{mempoolTxId}' is '{record.status}', not 'pending'",
                 )
 
             return cls(mempoolTxId=mempoolTxId, transaction=record.transaction)
