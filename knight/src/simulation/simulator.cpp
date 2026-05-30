@@ -1,6 +1,7 @@
 #include "simulation/simulator.h"
 
 #include "builder/bundle.h"
+#include "utils/utils.h"
 
 #include <utility>
 
@@ -11,12 +12,28 @@ Simulator::Simulator(Config config, boost::asio::io_context& io_ctx)
     : m_builder_rest_client(std::move(config), io_ctx)
 {}
 
-std::expected<std::string, builder::Error> Simulator::simulate(const candidate::Candidate& candidate) const
+std::expected<builder::BundleSimulationResult, builder::Error> Simulator::simulate(
+    const candidate::Candidate& candidate) const
 {
     builder::Bundle bundle;
     bundle.transactions.emplace_back(builder::MempoolTxRef{candidate.tx.mempool_tx_id});
 
-    return m_builder_rest_client.simulate_bundle(bundle);
+    auto raw_response = m_builder_rest_client.simulate_bundle(bundle);
+    if (!raw_response) {
+        return std::unexpected(raw_response.error());
+    }
+
+    auto json = parse_to_json(*raw_response);
+    if (!json) {
+        return std::unexpected(builder::Error::INVALID_RESPONSE);
+    }
+
+    auto result = builder::BundleSimulationResult::from_json(*json);
+    if (!result) {
+        return std::unexpected(builder::Error::INVALID_RESPONSE);
+    }
+
+    return *result;
 }
 
 } // namespace simulation

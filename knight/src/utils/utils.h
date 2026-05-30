@@ -28,11 +28,15 @@ std::optional<intx::uint256> json_hex_uint256(const boost::json::object& object,
 std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field);
 std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field, size_t expected_size);
 std::optional<std::optional<uint64_t>> json_optional_hex_uint64(const boost::json::object& object, std::string_view field);
+std::optional<std::optional<uint64_t>> json_optional_uint64(const boost::json::object& object, std::string_view field);
 std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(const boost::json::object& object, std::string_view field);
 std::optional<std::optional<bytes>> json_optional_hex_bytes(
     const boost::json::object& object,
     std::string_view field,
     size_t expected_size);
+std::optional<std::optional<std::string>> json_optional_string(
+    const boost::json::object& object,
+    std::string_view field);
 const boost::json::array* json_array(const boost::json::object& object, std::string_view field) noexcept;
 const boost::json::object* json_object(const boost::json::object& object, std::string_view field) noexcept;
 

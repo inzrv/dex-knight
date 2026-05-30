@@ -4,6 +4,7 @@
 #include "candidate/candidate.h"
 #include "candidate/errors.h"
 #include "common/log.h"
+#include "utils/utils.h"
 
 #include <stdexcept>
 #include <thread>
@@ -86,7 +87,19 @@ void Runtime::run_core_loop()
             continue;
         }
 
-        log::info("Runtime", "candidate simulation response: {}", *simulation);
+        log::info("Runtime",
+                  "candidate simulation result: status={} simulated={} tx_count={}",
+                  builder::bundle_status_to_string(simulation->status),
+                  simulation->simulated,
+                  simulation->transactions.size());
+
+        for (const auto& tx_result : simulation->transactions) {
+            log::info("Runtime",
+                      "candidate simulation tx result: mempool_tx_id={} chain_tx_hash={} status={}",
+                      tx_result.mempool_tx_id.value_or("-"),
+                      hex_data(tx_result.chain_tx_hash),
+                      builder::bundle_tx_status_to_string(tx_result.status));
+        }
     }
 
     log::info("Runtime", "core loop stopped");

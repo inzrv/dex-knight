@@ -1,5 +1,6 @@
 #pragma once
 
+#include "builder/bundle_result.h"
 #include "builder/errors.h"
 #include "builder/rest_client.h"
 #include "candidate/candidate.h"
@@ -18,7 +19,7 @@ class Simulator final
 public:
     Simulator(Config config, boost::asio::io_context& io_ctx);
 
-    std::expected<std::string, builder::Error> simulate(const candidate::Candidate& candidate) const;
+    std::expected<builder::BundleSimulationResult, builder::Error> simulate(const candidate::Candidate& candidate) const;
 
 private:
     builder::RestClient m_builder_rest_client;

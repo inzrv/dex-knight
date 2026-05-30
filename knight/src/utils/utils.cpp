@@ -203,6 +203,22 @@ std::optional<std::optional<uint64_t>> json_optional_hex_uint64(
     return std::optional<uint64_t>{*parsed};
 }
 
+std::optional<std::optional<uint64_t>> json_optional_uint64(
+    const boost::json::object& object,
+    std::string_view field)
+{
+    if (!object.if_contains(field) || object.at(field).is_null()) {
+        return std::optional<uint64_t>{};
+    }
+
+    auto parsed = json_uint64(object, field);
+    if (!parsed) {
+        return std::nullopt;
+    }
+
+    return std::optional<uint64_t>{*parsed};
+}
+
 std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(
     const boost::json::object& object,
     std::string_view field)
@@ -234,6 +250,21 @@ std::optional<std::optional<bytes>> json_optional_hex_bytes(
     }
 
     return std::optional<bytes>{std::move(*parsed)};
+}
+
+std::optional<std::optional<std::string>> json_optional_string(
+    const boost::json::object& object,
+    std::string_view field)
+{
+    const auto* value = object.if_contains(field);
+    if (value == nullptr || value->is_null()) {
+        return std::optional<std::string>{};
+    }
+    if (!value->is_string()) {
+        return std::nullopt;
+    }
+
+    return std::optional<std::string>{std::string(value->as_string().c_str())};
 }
 
 const boost::json::array* json_array(const boost::json::object& object, std::string_view field) noexcept
