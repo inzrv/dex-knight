@@ -2,16 +2,18 @@
 
 ## Lifecycle
 
-- Group: `repeatable`.
+- Group: `ready-env`.
 - Can be run multiple times; each run adds another `100,000 TokenA` and `100,000 TokenB` to each pool.
-- Starts or reuses the local chain when needed.
+- Does not start, redeploy, or clean local services.
+- Prepare a clean environment with `scenarios/ready-env/bin/start-clean.zsh` and clean it with `scenarios/ready-env/bin/cleanup.zsh`.
 
 This scenario prepares both deployed AMM pools with equal `TokenA` / `TokenB`
 liquidity.
 
 It
 
-- starts or reuses the local chain,
+- reads the existing local deployment metadata,
+- checks that the local chain RPC is reachable,
 - mints enough `TokenA` and `TokenB` to the deployer,
 - approves `Pool1` and `Pool2`, adds `100,000` of each token to each pool,
 - verifies the reserve changes.
@@ -19,5 +21,5 @@ It
 Run from the repository root:
 
 ```shell
-scenarios/repeatable/seed-pools/run.zsh
+scenarios/ready-env/seed-pools/run.zsh
 ```

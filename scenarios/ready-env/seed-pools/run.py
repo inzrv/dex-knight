@@ -7,14 +7,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scenario_support import (  # noqa: E402
+    DEPLOYMENT_FILE,
     ScenarioError,
     TOKEN_DECIMALS,
     add_pool_liquidity,
     deployment_role,
-    ensure_deployment,
     format_token_amount,
     pool_reserves,
     print_step,
+    require_running_deployment,
     rpc,
 )
 
@@ -22,8 +23,8 @@ POOL_TOKEN_AMOUNT = 100_000 * TOKEN_DECIMALS
 
 
 def main() -> int:
-    print_step("Preparing local chain")
-    deployment = ensure_deployment()
+    print_step("Checking existing local chain")
+    deployment = require_running_deployment()
     rpc_url = deployment["rpcUrl"]
     contracts = deployment["contracts"]
     token_a = contracts["tokenA"]
@@ -34,7 +35,13 @@ def main() -> int:
     deployer = deployer_role["address"]
     deployer_key = deployer_role["privateKey"]
 
+    print(f"Deployment file:  {DEPLOYMENT_FILE}")
+    print(f"RPC URL:          {rpc_url}")
     print(f"Deployer address: {deployer}")
+    print(f"TokenA address:   {token_a}")
+    print(f"TokenB address:   {token_b}")
+    print(f"Pool1 address:    {pool1}")
+    print(f"Pool2 address:    {pool2}")
 
     pools = [
         ("Pool1", pool1),

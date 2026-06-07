@@ -12,7 +12,6 @@ scenarios/repeatable/victim-swap/run.zsh
 scenarios/repeatable/victim-swap-revert/run.zsh
 scenarios/repeatable/bundle-simulation/run.zsh
 scenarios/repeatable/mempool-sequence/run.zsh
-scenarios/repeatable/seed-pools/run.zsh
 ```
 
 ## One-Shot
@@ -31,6 +30,7 @@ scenarios/one-shot/backrun/run.zsh
 scenarios/ready-env/bin/start-clean.zsh
 scenarios/ready-env/fund-victim-tokens/run.zsh
 scenarios/ready-env/approve-victim-tokens/run.zsh
+scenarios/ready-env/seed-pools/run.zsh
 scenarios/ready-env/victim-swap-pending/run.zsh
 scenarios/ready-env/flush-mempool/run.zsh
 scenarios/ready-env/single-bundle-tx/run.zsh
