@@ -1,6 +1,6 @@
 #pragma once
 
-#include "builder/bundle_result.h"
+#include "builder/bundle_sim_result.h"
 #include "builder/errors.h"
 #include "builder/rest_client.h"
 #include "candidate/candidate.h"
