@@ -21,6 +21,7 @@ public:
 
     std::expected<std::string, Error> request_snapshot() const;
     std::expected<std::string, Error> request_chain_head() const;
+    std::expected<std::string, Error> request_chain_call(const boost::json::object& payload) const;
     std::expected<std::string, Error> simulate_bundle(const Bundle& bundle) const;
 
 private:
@@ -36,6 +37,7 @@ private:
 
     static constexpr std::string_view kPendingSnapshotTarget{"/public/pending"};
     static constexpr std::string_view kChainHeadTarget{"/chain/head"};
+    static constexpr std::string_view kChainCallTarget{"/chain/call"};
     static constexpr std::string_view kBundleSimulationTarget{"/private/bundle/simulate"};
     static constexpr int kMaxAttempts{3};
     static constexpr std::chrono::milliseconds kBaseBackoff{200};

@@ -14,24 +14,14 @@ bool LocalMempool::apply_snapshot(CandidateSnapshot snapshot)
 
     {
         std::lock_guard lock{m_mutex};
-        if (m_closed) {
-            return false;
-        }
-
-        if (m_block_number && snapshot.block_number < *m_block_number) {
-            return false;
-        }
-
         if (snapshot.snapshot_seq < m_snapshot_seq) {
             return false;
         }
 
         m_candidates = std::move(next_candidates);
         m_snapshot_seq = snapshot.snapshot_seq;
-        m_block_number = snapshot.block_number;
     }
 
-    m_cv.notify_one();
     return true;
 }
 
@@ -39,46 +29,29 @@ bool LocalMempool::apply_pending_tx(Candidate candidate)
 {
     {
         std::lock_guard lock{m_mutex};
-        if (m_closed || candidate.tx.seq_num <= m_snapshot_seq) {
+        if (candidate.tx.seq_num <= m_snapshot_seq) {
             return false;
         }
 
         m_candidates.insert_or_assign(candidate.tx.seq_num, std::move(candidate));
     }
 
-    m_cv.notify_one();
     return true;
 }
 
-std::optional<Candidate> LocalMempool::try_pop_next_candidate()
+std::optional<Candidate> LocalMempool::pop_next_candidate()
 {
     std::lock_guard lock{m_mutex};
     return pop_next_candidate_locked();
 }
 
-std::expected<Candidate, Error> LocalMempool::wait_pop_next_candidate()
-{
-    std::unique_lock lock{m_mutex};
-    m_cv.wait(lock, [this] {
-        return !m_candidates.empty() || m_closed;
-    });
-
-    auto candidate = pop_next_candidate_locked();
-    if (!candidate) {
-        return std::unexpected(Error::CLOSED);
-    }
-
-    return std::move(*candidate);
-}
-
-void LocalMempool::close()
+void LocalMempool::clear()
 {
     {
         std::lock_guard lock{m_mutex};
-        m_closed = true;
+        m_candidates.clear();
+        m_snapshot_seq = 0;
     }
-
-    m_cv.notify_all();
 }
 
 std::optional<Candidate> LocalMempool::pop_next_candidate_locked()
@@ -103,12 +76,6 @@ uint64_t LocalMempool::snapshot_seq() const
 {
     std::lock_guard lock{m_mutex};
     return m_snapshot_seq;
-}
-
-std::optional<uint64_t> LocalMempool::block_number() const
-{
-    std::lock_guard lock{m_mutex};
-    return m_block_number;
 }
 
 } // namespace candidate

@@ -20,6 +20,17 @@ struct SandboxDex
         intx::uint256 amount_b;
     };
 
+    // function getReserves() returns (uint256 reserveA, uint256 reserveB)
+    struct GetReserves
+    {
+        using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
+
+        inline static const bytes selector{0x09, 0x02, 0xf1, 0xac};
+
+        intx::uint256 reserve_a;
+        intx::uint256 reserve_b;
+    };
+
     // function swapExactAForB(uint256 amountIn, uint256 minAmountOut)
     struct SwapExactAForB
     {

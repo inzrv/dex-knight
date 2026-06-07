@@ -3,10 +3,12 @@
 #include "builder/errors.h"
 #include "candidate/candidate.h"
 #include "candidate/errors.h"
+#include "candidate/state.h"
 #include "common/log.h"
 #include "decoder/decoder.h"
 #include "utils/utils.h"
 
+#include <string>
 #include <stdexcept>
 #include <thread>
 #include <utility>
@@ -67,23 +69,37 @@ void Runtime::stop()
 void Runtime::run_core_loop()
 {
     while (m_running) {
-        auto next_candidate = m_candidate_source->wait_pop_next_candidate();
-        if (!next_candidate) {
-            if (next_candidate.error() == candidate::Error::CLOSED) {
+        auto next_state = m_candidate_source->wait_pop_next_state();
+        if (!next_state) {
+            if (next_state.error() == candidate::Error::CLOSED) {
                 break;
             }
 
-            log::warn("Runtime", "failed to receive candidate: {}", candidate::error_to_string(next_candidate.error()));
+            log::warn("Runtime", "failed to receive state snapshot: {}", candidate::error_to_string(next_state.error()));
             continue;
         }
 
-        log::info("Runtime",
-                  "candidate received: mempool_tx_id={} seq_num={} swap_kind={}",
-                  next_candidate->tx.mempool_tx_id,
-                  next_candidate->tx.seq_num,
-                  candidate::swap_kind_to_string(next_candidate->swap_kind));
+        const auto block_number_str = next_state->block_number ? std::to_string(*next_state->block_number) : std::string{"none"};
+        if (!next_state->valid) {
+            log::warn("Runtime", "state snapshot invalid: block_number={}", block_number_str);
+            continue;
+        }
 
-        auto swap = decoder::decode_swap(*next_candidate);
+        if (!next_state->candidate) {
+            log::debug("Runtime", "state snapshot has no candidate: block_number={}", block_number_str);
+            continue;
+        }
+
+        const auto& current_candidate = *next_state->candidate;
+        log::info("Runtime",
+                  "candidate state received: block_number={} pools={} mempool_tx_id={} seq_num={} swap_kind={}",
+                  block_number_str,
+                  next_state->pools.size(),
+                  current_candidate.tx.mempool_tx_id,
+                  current_candidate.tx.seq_num,
+                  candidate::swap_kind_to_string(current_candidate.swap_kind));
+
+        auto swap = decoder::decode_swap(current_candidate);
         if (swap) {
             std::visit([](const auto& s) {
                 log::info("Runtime",
@@ -94,15 +110,15 @@ void Runtime::run_core_loop()
         } else {
             log::warn("Runtime",
                       "candidate swap decode failed: mempool_tx_id={}",
-                      next_candidate->tx.mempool_tx_id);
+                      current_candidate.tx.mempool_tx_id);
         }
 
-        auto simulation = m_simulator->simulate(*next_candidate);
+        auto simulation = m_simulator->simulate(current_candidate, next_state->block_number);
         if (!simulation) {
             if (simulation.error() == builder::Error::CANDIDATE_NOT_PENDING) {
                 log::info("Runtime",
                           "candidate simulation skipped: mempool_tx_id={} already mined or canceled",
-                          next_candidate->tx.mempool_tx_id);
+                          current_candidate.tx.mempool_tx_id);
             } else {
                 log::warn("Runtime", "candidate simulation failed: {}", builder::error_to_string(simulation.error()));
             }

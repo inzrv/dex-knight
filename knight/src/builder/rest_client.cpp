@@ -32,6 +32,12 @@ std::expected<std::string, Error> RestClient::request_chain_head() const
     return get_with_retry(kChainHeadTarget, "chain head");
 }
 
+std::expected<std::string, Error> RestClient::request_chain_call(const boost::json::object& payload) const
+{
+    const auto body = boost::json::serialize(payload);
+    return post_with_retry(kChainCallTarget, body, "chain call");
+}
+
 std::expected<std::string, Error> RestClient::simulate_bundle(const Bundle& bundle) const
 {
     const auto body = boost::json::serialize(bundle.to_json());
