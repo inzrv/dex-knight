@@ -31,6 +31,17 @@ class AnvilClient:
     def getLatestBlock(self) -> dict[str, Any]:
         return self._rpc("eth_getBlockByNumber", ["latest", False])
 
+    def getLatestBlockNumber(self) -> int:
+        block = self.getLatestBlock()
+        blockNumber = block.get("number")
+        if not isinstance(blockNumber, str):
+            raise RuntimeError("Anvil latest block response does not contain a block number")
+
+        try:
+            return int(blockNumber, 16)
+        except ValueError as error:
+            raise RuntimeError(f"Anvil returned invalid latest block number: {blockNumber}") from error
+
     def call(self, callParams: dict[str, str], block: str) -> str:
         return self._rpc("eth_call", [callParams, block])
 

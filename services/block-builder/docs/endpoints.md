@@ -236,12 +236,21 @@ Description: simulates a bundle with the same payload shape as
 an Anvil snapshot, collects receipts, and reverts the snapshot afterwards. Public
 mempool records are not marked as mined during simulation.
 
+Optional request field:
+
+- `blockNumber`: hex quantity for the chain head/state block the caller expects
+  the simulation to run against. If omitted, the builder uses the current head.
+  Future block numbers are rejected. Historical block simulation requires an
+  archived state execution path and is currently rejected instead of being
+  silently simulated on the wrong state.
+
 Example request:
 
 ```shell
 curl -X POST http://127.0.0.1:9001/private/bundle/simulate \
   -H "Content-Type: application/json" \
   -d '{
+    "blockNumber": "0x1",
     "transactions": [
       {
         "mempoolTxId": "mp-1234567890abcdef1234567890abcdef"
@@ -299,12 +308,20 @@ Description: mines a block with the submitted bundle. A bundle can reference
 public mempool transactions by `mempoolTxId` and can include direct private
 transactions.
 
+Optional request field:
+
+- `blockNumber`: hex quantity for the current chain head. If omitted, the
+  builder uses the current head. Mining rejects any value that does not equal
+  the current head because the live chain can only execute from its latest
+  state.
+
 Example request:
 
 ```shell
 curl -X POST http://127.0.0.1:9001/private/bundle \
   -H "Content-Type: application/json" \
   -d '{
+    "blockNumber": "0x1",
     "transactions": [
       {
         "mempoolTxId": "mp-1234567890abcdef1234567890abcdef"

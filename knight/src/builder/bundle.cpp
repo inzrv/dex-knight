@@ -1,5 +1,7 @@
 #include "builder/bundle.h"
 
+#include "utils/utils.h"
+
 namespace builder
 {
 
@@ -28,6 +30,9 @@ boost::json::object Bundle::to_json() const
     }
 
     boost::json::object object;
+    if (block_number) {
+        object["blockNumber"] = hex_quantity(*block_number);
+    }
     object["transactions"] = std::move(items);
     return object;
 }

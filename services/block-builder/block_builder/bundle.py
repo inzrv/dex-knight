@@ -40,6 +40,7 @@ class BundleItem:
 @dataclass(frozen=True)
 class Bundle:
     items: list[BundleItem]
+    blockNumber: Optional[int]
 
     @classmethod
     def fromJson(cls, data: dict[str, Any], mempool: Mempool) -> "Bundle":
@@ -51,7 +52,8 @@ class Bundle:
             items=[
                 BundleItem.fromJson(rawItem, mempool)
                 for rawItem in rawItems
-            ]
+            ],
+            blockNumber=_optionalBlockNumber(data, "blockNumber"),
         )
 
 
@@ -60,6 +62,27 @@ class BundleBuilder:
         self._anvil = anvil
 
     def simulateBundle(self, bundle: Bundle) -> dict[str, Any]:
+        headBlockNumber = self._anvil.getLatestBlockNumber()
+        targetBlockNumber = _resolveBundleBlockNumber(bundle, headBlockNumber)
+        if targetBlockNumber > headBlockNumber:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"bundle blockNumber {_hexQuantity(targetBlockNumber)} is ahead of "
+                    f"chain head {_hexQuantity(headBlockNumber)}"
+                ),
+            )
+
+        if targetBlockNumber < headBlockNumber:
+            raise HTTPException(
+                status_code=501,
+                detail=(
+                    "historical bundle simulation is not supported by the current "
+                    f"Anvil send-and-mine execution path; requested {_hexQuantity(targetBlockNumber)}, "
+                    f"head is {_hexQuantity(headBlockNumber)}"
+                ),
+            )
+
         snapshotId = self._anvil.snapshot()
         try:
             result = self._executeBundle(bundle)
@@ -69,6 +92,17 @@ class BundleBuilder:
             self._anvil.revert(snapshotId)
 
     def mineBundle(self, bundle: Bundle, mempool: Mempool) -> dict[str, Any]:
+        headBlockNumber = self._anvil.getLatestBlockNumber()
+        targetBlockNumber = _resolveBundleBlockNumber(bundle, headBlockNumber)
+        if targetBlockNumber != headBlockNumber:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"bundle blockNumber must equal chain head for mining; "
+                    f"requested {_hexQuantity(targetBlockNumber)}, head is {_hexQuantity(headBlockNumber)}"
+                ),
+            )
+
         result = self._executeBundle(bundle)
 
         for item, txResult in zip(bundle.items, result["transactions"]):
@@ -127,3 +161,28 @@ def _statusFromReceipt(receipt: Optional[dict[str, Any]]) -> str:
     if receipt is None:
         return "missing"
     return "included" if receipt.get("status") == "0x1" else "reverted"
+
+
+def _optionalBlockNumber(data: dict[str, Any], field: str) -> Optional[int]:
+    value = data.get(field)
+    if value is None:
+        return None
+
+    if not isinstance(value, str) or value == "":
+        raise ValueError(f"'{field}' must be a non-empty hex quantity string")
+
+    if not value.startswith(("0x", "0X")) or len(value) == 2:
+        raise ValueError(f"'{field}' must be a hex quantity string")
+
+    try:
+        return int(value, 16)
+    except ValueError as error:
+        raise ValueError(f"'{field}' must be a hex quantity string") from error
+
+
+def _resolveBundleBlockNumber(bundle: Bundle, headBlockNumber: int) -> int:
+    return bundle.blockNumber if bundle.blockNumber is not None else headBlockNumber
+
+
+def _hexQuantity(value: int) -> str:
+    return hex(value)

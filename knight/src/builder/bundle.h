@@ -4,6 +4,8 @@
 
 #include <boost/json.hpp>
 
+#include <cstdint>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -24,6 +26,7 @@ boost::json::object bundle_item_to_json(const BundleItem& item);
 
 struct Bundle final
 {
+    std::optional<uint64_t> block_number;
     std::vector<BundleItem> transactions;
 
     boost::json::object to_json() const;
