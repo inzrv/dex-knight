@@ -1,5 +1,6 @@
 #include "runtime/runtime.h"
 
+#include "arbitrage/calculator.h"
 #include "builder/errors.h"
 #include "candidate/candidate.h"
 #include "candidate/errors.h"
@@ -100,18 +101,19 @@ void Runtime::run_core_loop()
                   candidate::swap_kind_to_string(current_candidate.swap_kind));
 
         auto swap = decoder::decode_swap(current_candidate);
-        if (swap) {
-            std::visit([](const auto& s) {
-                log::info("Runtime",
-                          "candidate swap: amount_in={} min_amount_out={}",
-                          hex_quantity(s.amount_in),
-                          hex_quantity(s.min_amount_out));
-            }, *swap);
-        } else {
+        if (!swap) {
             log::warn("Runtime",
                       "candidate swap decode failed: mempool_tx_id={}",
                       current_candidate.tx.mempool_tx_id);
+            continue;
         }
+
+        std::visit([](const auto& s) {
+            log::info("Runtime",
+                      "candidate swap: amount_in={} min_amount_out={}",
+                      hex_quantity(s.amount_in),
+                      hex_quantity(s.min_amount_out));
+        }, *swap);
 
         auto simulation = m_simulator->simulate(current_candidate, state->block_number);
         if (!simulation) {
@@ -138,6 +140,38 @@ void Runtime::run_core_loop()
                       hex_data(tx_result.chain_tx_hash),
                       builder::bundle_tx_status_to_string(tx_result.status));
         }
+
+        if (simulation->status != builder::BundleStatus::INCLUDED) {
+            log::debug("Runtime",
+                       "arbitrage calculation skipped: candidate simulation status={} mempool_tx_id={}",
+                       builder::bundle_status_to_string(simulation->status),
+                       current_candidate.tx.mempool_tx_id);
+            continue;
+        }
+
+        const arbitrage::Params arbitrage_params;
+        auto opportunity = arbitrage::find_arbitrage(*state, current_candidate, *swap, arbitrage_params);
+        if (!opportunity) {
+            log::debug("Runtime",
+                       "arbitrage opportunity not found: block_number={} mempool_tx_id={}",
+                       block_number_str,
+                       current_candidate.tx.mempool_tx_id);
+            continue;
+        }
+
+        log::info("Runtime",
+                  "arbitrage opportunity found: buy_pool={} sell_pool={} amount_in_b={} "
+                  "min_amount_out_a={} min_amount_out_b={} min_profit_b={} "
+                  "expected_amount_out_a={} expected_amount_out_b={} expected_profit_b={}",
+                  hex_data(opportunity->buy_pool.address),
+                  hex_data(opportunity->sell_pool.address),
+                  hex_quantity(opportunity->amount_in_b),
+                  hex_quantity(opportunity->min_amount_out_a),
+                  hex_quantity(opportunity->min_amount_out_b),
+                  hex_quantity(opportunity->min_profit_b),
+                  hex_quantity(opportunity->expected_amount_out_a),
+                  hex_quantity(opportunity->expected_amount_out_b),
+                  hex_quantity(opportunity->expected_profit_b));
     }
 
     log::info("Runtime", "core loop stopped");
