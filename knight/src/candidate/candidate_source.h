@@ -36,7 +36,7 @@ public:
     CandidateSource& operator=(const CandidateSource&) = delete;
 
     void stop();
-    [[nodiscard]] std::expected<StateSnapshot, Error> wait_pop_next_state();
+    [[nodiscard]] std::expected<StateSnapshot, Error> wait_pop_state();
 
 private:
     void run() override;

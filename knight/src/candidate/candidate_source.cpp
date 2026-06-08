@@ -67,7 +67,7 @@ void CandidateSource::stop()
     Worker::stop();
 }
 
-std::expected<StateSnapshot, Error> CandidateSource::wait_pop_next_state()
+std::expected<StateSnapshot, Error> CandidateSource::wait_pop_state()
 {
     std::unique_lock lock{m_state_wait_mutex};
     m_state_cv.wait(lock, [this] {

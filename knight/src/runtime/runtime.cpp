@@ -69,32 +69,32 @@ void Runtime::stop()
 void Runtime::run_core_loop()
 {
     while (m_running) {
-        auto next_state = m_candidate_source->wait_pop_next_state();
-        if (!next_state) {
-            if (next_state.error() == candidate::Error::CLOSED) {
+        auto state = m_candidate_source->wait_pop_state();
+        if (!state) {
+            if (state.error() == candidate::Error::CLOSED) {
                 break;
             }
 
-            log::warn("Runtime", "failed to receive state snapshot: {}", candidate::error_to_string(next_state.error()));
+            log::warn("Runtime", "failed to receive state snapshot: {}", candidate::error_to_string(state.error()));
             continue;
         }
 
-        const auto block_number_str = next_state->block_number ? std::to_string(*next_state->block_number) : std::string{"none"};
-        if (!next_state->valid) {
+        const auto block_number_str = state->block_number ? std::to_string(*state->block_number) : std::string{"none"};
+        if (!state->valid) {
             log::warn("Runtime", "state snapshot invalid: block_number={}", block_number_str);
             continue;
         }
 
-        if (!next_state->candidate) {
+        if (!state->candidate) {
             log::debug("Runtime", "state snapshot has no candidate: block_number={}", block_number_str);
             continue;
         }
 
-        const auto& current_candidate = *next_state->candidate;
+        const auto& current_candidate = *state->candidate;
         log::info("Runtime",
                   "candidate state received: block_number={} pools={} mempool_tx_id={} seq_num={} swap_kind={}",
                   block_number_str,
-                  next_state->pools.size(),
+                  state->pools.size(),
                   current_candidate.tx.mempool_tx_id,
                   current_candidate.tx.seq_num,
                   candidate::swap_kind_to_string(current_candidate.swap_kind));
@@ -113,7 +113,7 @@ void Runtime::run_core_loop()
                       current_candidate.tx.mempool_tx_id);
         }
 
-        auto simulation = m_simulator->simulate(current_candidate, next_state->block_number);
+        auto simulation = m_simulator->simulate(current_candidate, state->block_number);
         if (!simulation) {
             if (simulation.error() == builder::Error::CANDIDATE_NOT_PENDING) {
                 log::info("Runtime",
