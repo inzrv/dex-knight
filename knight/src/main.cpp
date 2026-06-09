@@ -12,6 +12,7 @@
 
 int main(int argc, char* argv[])
 {
+    log::initialize();
     log::info("Main", "knight starting...");
 
     if (argc < 2) {

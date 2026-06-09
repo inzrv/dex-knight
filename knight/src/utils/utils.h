@@ -23,6 +23,31 @@ std::optional<bytes> parse_hex_bytes(std::string_view value);
 std::string hex_quantity(uint64_t value);
 std::string hex_quantity(const intx::uint256& value);
 std::string hex_data(const bytes& value);
+
+template <unsigned N>
+intx::uint<N> integer_sqrt(intx::uint<N> value)
+{
+    intx::uint<N> result{};
+    auto bit = intx::uint<N>{1} << (intx::uint<N>::num_bits - 2);
+
+    while (bit > value) {
+        bit >>= 2;
+    }
+
+    while (bit != 0) {
+        if (value >= result + bit) {
+            value -= result + bit;
+            result = (result >> 1) + bit;
+        } else {
+            result >>= 1;
+        }
+
+        bit >>= 2;
+    }
+
+    return result;
+}
+
 std::optional<uint64_t> json_hex_uint64(const boost::json::object& object, std::string_view field);
 std::optional<intx::uint256> json_hex_uint256(const boost::json::object& object, std::string_view field);
 std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field);

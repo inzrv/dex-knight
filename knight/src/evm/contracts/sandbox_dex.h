@@ -9,6 +9,9 @@ namespace evm
 
 struct SandboxDex
 {
+    inline static constexpr intx::uint256 fee_numerator{997};
+    inline static constexpr intx::uint256 fee_denominator{1000};
+
     // function seedLiquidity(uint256 amountA, uint256 amountB)
     struct SeedLiquidity
     {

@@ -9,14 +9,31 @@
 #include "decoder/decoder.h"
 #include "utils/utils.h"
 
-#include <string>
+#include <cstdint>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include <utility>
 #include <variant>
 
 namespace runtime
 {
+namespace
+{
+
+constexpr uint64_t TOKEN_UNIT{1'000'000'000'000'000'000ULL};
+constexpr uint64_t MAX_ARBITRAGE_AMOUNT_IN_B_TOKENS{1'000'000};
+
+arbitrage::Params make_default_arbitrage_params()
+{
+    return arbitrage::Params{
+        .max_amount_in_b = intx::uint256{MAX_ARBITRAGE_AMOUNT_IN_B_TOKENS} * intx::uint256{TOKEN_UNIT},
+        .min_profit_b = intx::uint256{0},
+        .min_output_bps = 0,
+    };
+}
+
+} // namespace
 
 Runtime::Runtime(RuntimeFactory& factory)
     : m_io_ctx()
@@ -149,7 +166,7 @@ void Runtime::run_core_loop()
             continue;
         }
 
-        const arbitrage::Params arbitrage_params;
+        const auto arbitrage_params = make_default_arbitrage_params();
         auto opportunity = arbitrage::find_arbitrage(*state, current_candidate, *swap, arbitrage_params);
         if (!opportunity) {
             log::debug("Runtime",
