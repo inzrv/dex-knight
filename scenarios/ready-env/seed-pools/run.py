@@ -19,7 +19,7 @@ from scenario_support import (  # noqa: E402
     rpc,
 )
 
-POOL_TOKEN_AMOUNT = 100_000 * TOKEN_DECIMALS
+POOL_TOKEN_AMOUNT = 1_000 * TOKEN_DECIMALS
 
 
 def main() -> int:
@@ -89,7 +89,7 @@ def main() -> int:
             raise ScenarioError(f"{label} reserveB expected {expected_b}, got {after_b}")
 
     print_step("Scenario complete")
-    print("Both pools received 100,000 TokenA and 100,000 TokenB.")
+    print("Both pools received 1,000 TokenA and 1,000 TokenB.")
     return 0
 
 
