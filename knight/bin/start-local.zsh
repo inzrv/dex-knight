@@ -36,7 +36,12 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
 fi
 
 echo "Building Knight"
-cmake -S "${KNIGHT_DIR}" -B "${BUILD_DIR}"
+cmake -S "${KNIGHT_DIR}" -B "${BUILD_DIR}" -DBUILD_TESTING=ON
+cmake --build "${BUILD_DIR}" --target knight_tests
+
+echo "Running Knight tests"
+ctest --test-dir "${BUILD_DIR}" --output-on-failure
+
 cmake --build "${BUILD_DIR}" --target knight
 
 if [[ ! -x "${BINARY}" ]]; then

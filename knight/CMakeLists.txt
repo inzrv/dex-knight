@@ -23,6 +23,8 @@ add_subdirectory(external/solabi)
 add_subdirectory(src)
 
 if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+    set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
     add_subdirectory(external/googletest)
     add_subdirectory(tests)
 endif()
