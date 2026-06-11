@@ -3,5 +3,8 @@
 #include <intx/intx.hpp>
 #include <solabi/common.h>
 
-inline constexpr unsigned int kWordSize{32};
-inline constexpr unsigned int kAddressLength{20};
+using bytes = solabi::bytes;
+using bytes_view = solabi::bytes_view;
+
+inline constexpr unsigned int kWordSize{solabi::kWordSize};
+inline constexpr unsigned int kAddressLength{solabi::kAddressLength};
