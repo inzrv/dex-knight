@@ -114,7 +114,10 @@ def main() -> int:
     victim_b_before = token_balance(rpc_url, token_b, victim)
     backrun_b_after_mint = token_balance(rpc_url, token_b, backrun)
     if backrun_b_after_mint != BACKRUN_AMOUNT_B:
-        raise ScenarioError(f"expected backrun contract to hold {BACKRUN_AMOUNT_B} TokenB, got {backrun_b_after_mint}")
+        raise ScenarioError(
+            f"expected backrun contract to hold {BACKRUN_AMOUNT_B} TokenB, "
+            f"got {backrun_b_after_mint}"
+        )
 
     print_step("Calculating victim and backrun route")
     victim_amount_out_b = sandbox_amount_out(

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -13,13 +12,11 @@ from scenario_support import (  # noqa: E402
     ScenarioError,
     account_nonce,
     chain_nonce,
-    deployment_role,
+    deployment_actor_roles,
     print_step,
     require_running_deployment,
     wait_for_builder,
 )
-
-PREFERRED_ROLE_ORDER = ("deployer", "victim", "bot", "treasury")
 
 
 def main() -> int:
@@ -33,8 +30,8 @@ def main() -> int:
     print(f"RPC URL:         {rpc_url}")
     print(f"Builder URL:     {BUILDER_URL}")
 
-    actors = actor_roles(deployment)
-    if len(actors) == 0:
+    actors = deployment_actor_roles(deployment)
+    if not actors:
         raise ScenarioError("deployment does not contain actor roles")
 
     print_step("Reading actor nonces")
@@ -51,42 +48,6 @@ def main() -> int:
     print_step("Scenario complete")
     print("Builder nonce endpoint returned the current RPC nonce for every deployment actor.")
     return 0
-
-
-def actor_roles(deployment: dict[str, Any]) -> list[tuple[str, str]]:
-    roles = deployment.get("roles")
-    if isinstance(roles, dict):
-        return sorted(
-            (
-                (name, role["address"])
-                for name, role in roles.items()
-                if isinstance(name, str)
-                and isinstance(role, dict)
-                and isinstance(role.get("address"), str)
-                and role["address"] != ""
-            ),
-            key=lambda item: role_sort_key(item[0]),
-        )
-
-    actors: list[tuple[str, str]] = []
-    for name in PREFERRED_ROLE_ORDER:
-        try:
-            role = deployment_role(deployment, name)
-        except ScenarioError:
-            continue
-
-        address = role.get("address")
-        if isinstance(address, str) and address != "":
-            actors.append((name, address))
-
-    return actors
-
-
-def role_sort_key(name: str) -> tuple[int, str]:
-    try:
-        return (PREFERRED_ROLE_ORDER.index(name), name)
-    except ValueError:
-        return (len(PREFERRED_ROLE_ORDER), name)
 
 
 if __name__ == "__main__":

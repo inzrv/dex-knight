@@ -1,11 +1,5 @@
 # Single Bundle Transaction Scenario
 
-## Lifecycle
-
-- Group: `ready-env`.
-- Does not start, redeploy, or clean local services.
-- Prepare a clean environment with `scenarios/ready-env/bin/start-clean.zsh` and clean it with `scenarios/ready-env/bin/cleanup.zsh`.
-
 This scenario checks the smallest builder-controlled mining path: one public
 mempool transaction is included through one private bundle and produces exactly
 one new block with exactly one transaction.
@@ -13,7 +7,7 @@ one new block with exactly one transaction.
 It does not deploy contracts, seed pools, mint tokens, or restart services. The
 local chain and block builder must already be running.
 
-It
+## Steps
 
 - reads the existing local deployment metadata,
 - checks that the local chain RPC and block builder are reachable,
@@ -23,7 +17,7 @@ It
 - verifies the chain advanced by exactly one block,
 - verifies the new block contains exactly one transaction.
 
-Run from the repository root:
+## Run
 
 ```shell
 scenarios/ready-env/single-bundle-tx/run.zsh

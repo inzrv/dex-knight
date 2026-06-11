@@ -11,7 +11,6 @@ from scenario_support import (  # noqa: E402
     DEPLOYMENT_FILE,
     ScenarioError,
     TOKEN_DECIMALS,
-    account_nonce,
     block_number,
     chain_head,
     chain_head_label,
@@ -21,6 +20,7 @@ from scenario_support import (  # noqa: E402
     pending_records,
     public_transaction_payload,
     print_step,
+    next_nonce_for_sender,
     require_builder_controlled_mining,
     require_running_deployment,
     submit_public_transaction,
@@ -97,21 +97,6 @@ def main() -> int:
     return 0
 
 
-def next_nonce_for_sender(rpc_url: str, sender: str, records: list[dict[str, Any]]) -> int:
-    nonce = account_nonce(rpc_url, sender)
-    for record in records:
-        transaction = record.get("transaction")
-        if not isinstance(transaction, dict):
-            continue
-
-        tx_from = transaction.get("from")
-        tx_nonce = transaction.get("nonce")
-        if isinstance(tx_from, str) and tx_from.lower() == sender.lower() and isinstance(tx_nonce, str):
-            nonce = max(nonce, int(tx_nonce, 16) + 1)
-
-    return nonce
-
-
 def assert_pending_swap(
     before_block: int,
     after_block: int,
@@ -128,7 +113,8 @@ def assert_pending_swap(
 
     if len(after_records) != len(before_records) + 1:
         raise ScenarioError(
-            f"expected pending mempool size to increase by 1, got before={len(before_records)}, after={len(after_records)}"
+            f"expected pending mempool size to increase by 1, got before={len(before_records)}, "
+            f"after={len(after_records)}"
         )
 
     mempool_tx_id = mempool_record.get("mempoolTxId")

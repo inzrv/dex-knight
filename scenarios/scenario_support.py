@@ -20,6 +20,7 @@ ENV_FILE = BLOCKCHAIN_DIR / "config" / "local.anvil.env"
 BUILDER_URL = os.environ.get("BLOCK_BUILDER_URL", "http://127.0.0.1:9001")
 DEFAULT_TOKEN_DECIMALS = 18
 TOKEN_DECIMALS = 10**DEFAULT_TOKEN_DECIMALS
+_PREFERRED_ROLE_ORDER = ("deployer", "victim", "bot", "treasury")
 
 
 # Ensures a local blockchain deployment exists and returns its metadata.
@@ -60,6 +61,43 @@ def deployment_role(deployment: dict[str, Any], name: str) -> dict[str, str]:
         return role
 
     raise ScenarioError(f"deployment role '{name}' not found")
+
+
+# Reads every actor role declared by deployment metadata.
+def deployment_actor_roles(deployment: dict[str, Any]) -> list[tuple[str, str]]:
+    roles = deployment.get("roles")
+    if isinstance(roles, dict):
+        return sorted(
+            (
+                (name, role["address"])
+                for name, role in roles.items()
+                if isinstance(name, str)
+                and isinstance(role, dict)
+                and isinstance(role.get("address"), str)
+                and role["address"] != ""
+            ),
+            key=lambda item: _role_sort_key(item[0]),
+        )
+
+    actors: list[tuple[str, str]] = []
+    for name in _PREFERRED_ROLE_ORDER:
+        try:
+            role = deployment_role(deployment, name)
+        except ScenarioError:
+            continue
+
+        address = role.get("address")
+        if isinstance(address, str) and address != "":
+            actors.append((name, address))
+
+    return actors
+
+
+def _role_sort_key(name: str) -> tuple[int, str]:
+    try:
+        return (_PREFERRED_ROLE_ORDER.index(name), name)
+    except ValueError:
+        return (len(_PREFERRED_ROLE_ORDER), name)
 
 
 # Starts the local block builder and waits until its health endpoint responds.
@@ -139,7 +177,8 @@ def chain_head_label(head: dict[str, Any]) -> str:
 def require_running_deployment() -> dict[str, Any]:
     if not DEPLOYMENT_FILE.exists():
         raise ScenarioError(
-            f"deployment file does not exist: {DEPLOYMENT_FILE}; run scenarios/ready-env/bin/start-clean.zsh first"
+            f"deployment file does not exist: {DEPLOYMENT_FILE}; "
+            "run scenarios/ready-env/bin/start-clean.zsh first"
         )
 
     deployment = read_json(DEPLOYMENT_FILE)
@@ -240,6 +279,35 @@ def account_nonce(rpc_url: str, account: str) -> int:
     return cast_int(["cast", "nonce", account, "--rpc-url", rpc_url], cwd=BLOCKCHAIN_DIR)
 
 
+# Picks the next sender nonce, including transactions already pending in builder mempool.
+def next_nonce_for_sender(
+    rpc_url: str,
+    sender: str,
+    records: list[dict[str, Any]],
+) -> int:
+    nonce = account_nonce(rpc_url, sender)
+    for record in records:
+        transaction = record.get("transaction")
+        if not isinstance(transaction, dict):
+            continue
+
+        tx_from = transaction.get("from")
+        tx_nonce = transaction.get("nonce")
+        if (
+            isinstance(tx_from, str)
+            and tx_from.lower() == sender.lower()
+            and isinstance(tx_nonce, str)
+        ):
+            try:
+                pending_nonce = int(tx_nonce, 16)
+            except ValueError as error:
+                raise ScenarioError(f"pending transaction contains invalid nonce: {tx_nonce}") from error
+
+            nonce = max(nonce, pending_nonce + 1)
+
+    return nonce
+
+
 # Encodes contract call calldata with cast calldata.
 def contract_calldata(signature: str, *args: str) -> str:
     return run(
@@ -261,22 +329,6 @@ def quote_amount_out_a_for_b(rpc_url: str, pool: str, amount_in: int) -> int:
             "call",
             pool,
             "getAmountOutAForB(uint256)(uint256)",
-            str(amount_in),
-            "--rpc-url",
-            rpc_url,
-        ],
-        cwd=BLOCKCHAIN_DIR,
-    )
-
-
-# Quotes Pool1-style TokenB to TokenA output for an exact input amount.
-def quote_amount_out_b_for_a(rpc_url: str, pool: str, amount_in: int) -> int:
-    return cast_int(
-        [
-            "cast",
-            "call",
-            pool,
-            "getAmountOutBForA(uint256)(uint256)",
             str(amount_in),
             "--rpc-url",
             rpc_url,
