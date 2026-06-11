@@ -3,6 +3,7 @@
 #include "common/types.h"
 
 #include <solabi/decoder.h>
+#include <solabi/utils.h>
 
 namespace evm
 {
@@ -17,7 +18,7 @@ struct SandboxDex
     {
         using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
 
-        inline static const bytes kSelector{0x8d, 0x7e, 0x07, 0x6d};
+        inline static const bytes kSelector{solabi::from_hex("0x8d7e076d")};
 
         intx::uint256 amount_a;
         intx::uint256 amount_b;
@@ -28,7 +29,7 @@ struct SandboxDex
     {
         using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
 
-        inline static const bytes kSelector{0x09, 0x02, 0xf1, 0xac};
+        inline static const bytes kSelector{solabi::from_hex("0x0902f1ac")};
 
         intx::uint256 reserve_a;
         intx::uint256 reserve_b;
@@ -39,7 +40,7 @@ struct SandboxDex
     {
         using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
 
-        inline static const bytes kSelector{0x4c, 0xab, 0xca, 0x0a};
+        inline static const bytes kSelector{solabi::from_hex("0x4cabca0a")};
 
         intx::uint256 amount_in;
         intx::uint256 min_amount_out;
@@ -50,7 +51,7 @@ struct SandboxDex
     {
         using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
 
-        inline static const bytes kSelector{0xdd, 0x4f, 0x16, 0x11};
+        inline static const bytes kSelector{solabi::from_hex("0xdd4f1611")};
 
         intx::uint256 amount_in;
         intx::uint256 min_amount_out;

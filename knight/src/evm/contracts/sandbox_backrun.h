@@ -3,6 +3,7 @@
 #include "common/types.h"
 
 #include <solabi/types.h>
+#include <solabi/utils.h>
 
 namespace evm
 {
@@ -24,10 +25,8 @@ struct SandboxBackrun
                                              solabi::uint_t<256>,
                                              solabi::uint_t<256>>;
 
-        inline static const bytes kTopic{0xf1, 0x0a, 0x5f, 0x8a, 0x7c, 0x6a, 0x46, 0x93,
-                                         0xcc, 0xca, 0x3e, 0xd1, 0x76, 0x69, 0xda, 0x82,
-                                         0x4f, 0x6a, 0x42, 0xe8, 0x51, 0x01, 0xb8, 0x03,
-                                         0x93, 0x70, 0xbd, 0xb4, 0xa8, 0x5f, 0x98, 0xca};
+        inline static const bytes kTopic{
+            solabi::from_hex("0xf10a5f8a7c6a4693ccca3ed17669da824f6a42e85101b8039370bdb4a85f98ca")};
 
         bytes buy_pool;
         bytes sell_pool;
@@ -54,7 +53,7 @@ struct SandboxBackrun
                                         solabi::uint_t<256>,
                                         solabi::uint_t<256>>;
 
-        inline static const bytes kSelector{0x21, 0x2c, 0x22, 0xbe};
+        inline static const bytes kSelector{solabi::from_hex("0x212c22be")};
 
         bytes buy_pool;
         bytes sell_pool;
