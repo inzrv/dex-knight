@@ -38,6 +38,16 @@ def create_app() -> FastAPI:
         except RuntimeError as error:
             raise HTTPException(status_code=502, detail=str(error)) from error
 
+    @app.get("/chain/nonce/{address}")
+    async def chain_nonce(address: str) -> dict:
+        try:
+            return {
+                "address": address,
+                "nonce": anvil.getTransactionCount(address),
+            }
+        except RuntimeError as error:
+            raise HTTPException(status_code=502, detail=str(error)) from error
+
     @app.post("/chain/call")
     async def chain_call(payload: dict) -> dict:
         try:

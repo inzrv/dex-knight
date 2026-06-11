@@ -1,9 +1,11 @@
 #include "builder/rest_client.h"
 
 #include "common/log.h"
+#include "utils/utils.h"
 
 #include <boost/json/serialize.hpp>
 
+#include <string>
 #include <thread>
 #include <utility>
 
@@ -33,6 +35,27 @@ std::expected<std::string, Error> RestClient::request_chain_call(
 {
     const auto body = boost::json::serialize(payload);
     return post_with_retry(kChainCallTarget, body, "chain call");
+}
+
+std::expected<uint64_t, Error> RestClient::request_nonce(const bytes& address) const
+{
+    const std::string target = std::string{kChainNonceTarget} + "/" + hex_data(address);
+    const auto response = get_with_retry(target, "chain nonce");
+    if (!response) {
+        return std::unexpected(response.error());
+    }
+
+    const auto json = parse_to_json_object(*response);
+    if (!json) {
+        return std::unexpected(Error::INVALID_RESPONSE);
+    }
+
+    const auto nonce = json_hex_uint64(*json, "nonce");
+    if (!nonce) {
+        return std::unexpected(Error::INVALID_RESPONSE);
+    }
+
+    return *nonce;
 }
 
 std::expected<std::string, Error> RestClient::simulate_bundle(const Bundle& bundle) const

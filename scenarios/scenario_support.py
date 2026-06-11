@@ -96,6 +96,19 @@ def chain_head() -> dict[str, Any]:
     return builder_request("GET", "/chain/head")
 
 
+# Reads an account nonce through the block builder.
+def chain_nonce(address: str) -> int:
+    response = builder_request("GET", f"/chain/nonce/{address}")
+    nonce = response.get("nonce") if isinstance(response, dict) else None
+    if not isinstance(nonce, str):
+        raise ScenarioError("chain nonce response does not contain nonce")
+
+    try:
+        return int(nonce, 16)
+    except ValueError as error:
+        raise ScenarioError(f"chain nonce response contains invalid nonce: {nonce}") from error
+
+
 # Parses a block number from a chain head response.
 def block_number(head: dict[str, Any]) -> int:
     block_number_hex = head.get("blockNumber")

@@ -28,6 +28,7 @@ scenarios/one-shot/backrun/run.zsh
 
 ```shell
 scenarios/ready-env/bin/start-clean.zsh
+scenarios/ready-env/actor-nonces/run.zsh
 scenarios/ready-env/fund-victim-tokens/run.zsh
 scenarios/ready-env/approve-victim-tokens/run.zsh
 scenarios/ready-env/seed-pools/run.zsh
