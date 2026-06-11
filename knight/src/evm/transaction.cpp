@@ -11,7 +11,7 @@ std::optional<Transaction> Transaction::from_json(const boost::json::value& valu
     }
 
     const auto& object = value.as_object();
-    auto from = json_hex_bytes(object, "from", ADDRESS_LENGTH);
+    auto from = json_hex_bytes(object, "from", kAddressLength);
     auto input = json_hex_bytes(object, "input");
     auto gas = json_hex_uint64(object, "gas");
     auto nonce = json_hex_uint64(object, "nonce");
@@ -45,7 +45,7 @@ std::optional<Transaction> Transaction::from_json(const boost::json::value& valu
     }
 
     auto hash = json_optional_hex_bytes(object, "hash", 32);
-    auto to = json_optional_hex_bytes(object, "to", ADDRESS_LENGTH);
+    auto to = json_optional_hex_bytes(object, "to", kAddressLength);
     auto gas_price = json_optional_hex_uint256(object, "gasPrice");
     auto max_fee_per_gas = json_optional_hex_uint256(object, "maxFeePerGas");
     auto max_priority_fee_per_gas = json_optional_hex_uint256(object, "maxPriorityFeePerGas");

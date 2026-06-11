@@ -18,11 +18,11 @@ bool starts_with_selector(const bytes& input, const bytes& selector)
 
 std::optional<SwapKind> swap_kind_from_input(const bytes& input)
 {
-    if (starts_with_selector(input, evm::SandboxDex::SwapExactAForB::selector)) {
+    if (starts_with_selector(input, evm::SandboxDex::SwapExactAForB::kSelector)) {
         return SwapKind::A_FOR_B;
     }
 
-    if (starts_with_selector(input, evm::SandboxDex::SwapExactBForA::selector)) {
+    if (starts_with_selector(input, evm::SandboxDex::SwapExactBForA::kSelector)) {
         return SwapKind::B_FOR_A;
     }
 

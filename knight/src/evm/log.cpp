@@ -14,7 +14,7 @@ std::optional<Log> Log::from_json(const boost::json::value& value)
     }
 
     const auto& object = value.as_object();
-    auto address = json_hex_bytes(object, "address", ADDRESS_LENGTH);
+    auto address = json_hex_bytes(object, "address", kAddressLength);
     auto data = json_hex_bytes(object, "data");
     const auto* raw_topics = json_array(object, "topics");
 
@@ -29,7 +29,7 @@ std::optional<Log> Log::from_json(const boost::json::value& value)
             return std::nullopt;
         }
         auto topic = parse_hex_bytes(raw_topic.as_string().c_str());
-        if (!topic || topic->size() != WORD_SIZE) {
+        if (!topic || topic->size() != kWordSize) {
             return std::nullopt;
         }
         topics.push_back(std::move(*topic));

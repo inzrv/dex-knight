@@ -21,14 +21,13 @@ namespace runtime
 namespace
 {
 
-constexpr uint64_t TOKEN_UNIT{1'000'000'000'000'000'000ULL};
-constexpr uint64_t MAX_ARBITRAGE_AMOUNT_IN_B_TOKENS{1'000'000};
+constexpr uint64_t kTokenUnit{1'000'000'000'000'000'000ULL};
+constexpr uint64_t kMaxArbitrageAmountInBTokens{1'000'000};
 
 arbitrage::Params make_default_arbitrage_params()
 {
     return arbitrage::Params{
-        .max_amount_in_b =
-            intx::uint256{MAX_ARBITRAGE_AMOUNT_IN_B_TOKENS} * intx::uint256{TOKEN_UNIT},
+        .max_amount_in_b = intx::uint256{kMaxArbitrageAmountInBTokens} * intx::uint256{kTokenUnit},
         .min_profit_b = intx::uint256{0},
         .min_output_bps = 0,
     };

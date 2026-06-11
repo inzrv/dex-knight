@@ -9,15 +9,15 @@ namespace evm
 
 struct SandboxDex
 {
-    inline static constexpr intx::uint256 fee_numerator{997};
-    inline static constexpr intx::uint256 fee_denominator{1000};
+    inline static constexpr intx::uint256 kFeeNumerator{997};
+    inline static constexpr intx::uint256 kFeeDenominator{1000};
 
     // function seedLiquidity(uint256 amountA, uint256 amountB)
     struct SeedLiquidity
     {
         using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
 
-        inline static const bytes selector{0x8d, 0x7e, 0x07, 0x6d};
+        inline static const bytes kSelector{0x8d, 0x7e, 0x07, 0x6d};
 
         intx::uint256 amount_a;
         intx::uint256 amount_b;
@@ -28,7 +28,7 @@ struct SandboxDex
     {
         using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
 
-        inline static const bytes selector{0x09, 0x02, 0xf1, 0xac};
+        inline static const bytes kSelector{0x09, 0x02, 0xf1, 0xac};
 
         intx::uint256 reserve_a;
         intx::uint256 reserve_b;
@@ -39,7 +39,7 @@ struct SandboxDex
     {
         using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
 
-        inline static const bytes selector{0x4c, 0xab, 0xca, 0x0a};
+        inline static const bytes kSelector{0x4c, 0xab, 0xca, 0x0a};
 
         intx::uint256 amount_in;
         intx::uint256 min_amount_out;
@@ -50,7 +50,7 @@ struct SandboxDex
     {
         using abi_tag = solabi::tuple_t<solabi::uint_t<256>, solabi::uint_t<256>>;
 
-        inline static const bytes selector{0xdd, 0x4f, 0x16, 0x11};
+        inline static const bytes kSelector{0xdd, 0x4f, 0x16, 0x11};
 
         intx::uint256 amount_in;
         intx::uint256 min_amount_out;

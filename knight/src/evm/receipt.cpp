@@ -25,7 +25,7 @@ std::optional<Receipt> Receipt::from_json(const boost::json::value& value)
     const auto block_number = json_hex_uint64(object, "blockNumber");
     const auto gas_used = json_hex_uint64(object, "gasUsed");
     const auto effective_gas_price = json_hex_uint256(object, "effectiveGasPrice");
-    const auto from = json_hex_bytes(object, "from", ADDRESS_LENGTH);
+    const auto from = json_hex_bytes(object, "from", kAddressLength);
 
     if (!type || *type > UINT8_MAX || !status || !cumulative_gas_used || raw_logs == nullptr ||
         !logs_bloom || !transaction_hash || !transaction_index || !block_hash || !block_number ||
@@ -43,8 +43,8 @@ std::optional<Receipt> Receipt::from_json(const boost::json::value& value)
         logs.push_back(std::move(*log));
     }
 
-    auto to = json_optional_hex_bytes(object, "to", ADDRESS_LENGTH);
-    auto contract_address = json_optional_hex_bytes(object, "contractAddress", ADDRESS_LENGTH);
+    auto to = json_optional_hex_bytes(object, "to", kAddressLength);
+    auto contract_address = json_optional_hex_bytes(object, "contractAddress", kAddressLength);
     auto block_timestamp = json_optional_uint64(object, "blockTimestamp");
     if (!to || !contract_address || !block_timestamp) {
         return std::nullopt;

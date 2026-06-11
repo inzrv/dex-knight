@@ -11,7 +11,7 @@ namespace arbitrage
 namespace
 {
 
-constexpr uint16_t BPS_DENOMINATOR{10'000};
+constexpr uint16_t kBpsDenominator{10'000};
 
 struct RouteQuote final
 {
@@ -28,8 +28,8 @@ std::optional<intx::uint256> amount_out(const intx::uint256& amount_in,
         return std::nullopt;
     }
 
-    const auto amount_in_with_fee = amount_in * evm::SandboxDex::fee_numerator;
-    const auto denominator = reserve_in * evm::SandboxDex::fee_denominator + amount_in_with_fee;
+    const auto amount_in_with_fee = amount_in * evm::SandboxDex::kFeeNumerator;
+    const auto denominator = reserve_in * evm::SandboxDex::kFeeDenominator + amount_in_with_fee;
     if (denominator == 0) {
         return std::nullopt;
     }
@@ -39,7 +39,7 @@ std::optional<intx::uint256> amount_out(const intx::uint256& amount_in,
 
 intx::uint256 apply_bps(const intx::uint256& value, uint16_t bps)
 {
-    return value * intx::uint256{bps} / intx::uint256{BPS_DENOMINATOR};
+    return value * intx::uint256{bps} / intx::uint256{kBpsDenominator};
 }
 
 const candidate::PoolSnapshot* find_pool_snapshot(const candidate::StateSnapshot& state,
@@ -116,20 +116,20 @@ std::optional<intx::uint256> optimal_amount_in_b(const candidate::PoolSnapshot& 
                                                  const candidate::PoolSnapshot& sell_pool,
                                                  const Params& params)
 {
-    const intx::uint<1024> fee_numerator{evm::SandboxDex::fee_numerator};
-    const intx::uint<1024> fee_denominator{evm::SandboxDex::fee_denominator};
-    const auto fee_numerator_squared = fee_numerator * fee_numerator;
-    const auto fee_denominator_squared = fee_denominator * fee_denominator;
+    const intx::uint<1024> kFeeNumerator{evm::SandboxDex::kFeeNumerator};
+    const intx::uint<1024> kFeeDenominator{evm::SandboxDex::kFeeDenominator};
+    const auto kFeeNumeratorSquared = kFeeNumerator * kFeeNumerator;
+    const auto kFeeDenominatorSquared = kFeeDenominator * kFeeDenominator;
 
     // For B -> A -> B routes, amountOutB(x) = C*x / (D + E*x).
     // The unconstrained continuous optimum is (sqrt(C*D) - D) / E.
-    const intx::uint<1024> c = fee_numerator_squared * intx::uint<1024>{buy_pool.reserve_a} *
+    const intx::uint<1024> c = kFeeNumeratorSquared * intx::uint<1024>{buy_pool.reserve_a} *
                                intx::uint<1024>{sell_pool.reserve_b};
-    const intx::uint<1024> d = fee_denominator_squared * intx::uint<1024>{buy_pool.reserve_b} *
+    const intx::uint<1024> d = kFeeDenominatorSquared * intx::uint<1024>{buy_pool.reserve_b} *
                                intx::uint<1024>{sell_pool.reserve_a};
     const intx::uint<1024> e =
-        fee_numerator * fee_denominator * intx::uint<1024>{sell_pool.reserve_a} +
-        fee_numerator_squared * intx::uint<1024>{buy_pool.reserve_a};
+        kFeeNumerator * kFeeDenominator * intx::uint<1024>{sell_pool.reserve_a} +
+        kFeeNumeratorSquared * intx::uint<1024>{buy_pool.reserve_a};
 
     if (c == 0 || d == 0 || e == 0) {
         return std::nullopt;
@@ -204,7 +204,7 @@ std::optional<Opportunity> find_arbitrage(const candidate::StateSnapshot& state,
                                           const decoder::Swap& swap,
                                           const Params& params)
 {
-    if (params.min_output_bps > BPS_DENOMINATOR) {
+    if (params.min_output_bps > kBpsDenominator) {
         return std::nullopt;
     }
 

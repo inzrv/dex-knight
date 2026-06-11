@@ -296,7 +296,7 @@ std::optional<std::vector<PoolSnapshot>> CandidateSource::request_pool_snapshots
     for (const auto& pool : m_pools) {
         boost::json::object payload;
         payload["to"] = hex_data(pool.address);
-        payload["data"] = hex_data(evm::SandboxDex::GetReserves::selector);
+        payload["data"] = hex_data(evm::SandboxDex::GetReserves::kSelector);
         payload["block"] = hex_quantity(block_number);
 
         const auto raw_response = m_builder_rest_client->request_chain_call(payload);

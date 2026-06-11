@@ -112,9 +112,9 @@ private:
 
     static std::optional<PoolConfig> parse_pool(const boost::json::object& json)
     {
-        auto address = json_hex_bytes(json, "address", ADDRESS_LENGTH);
-        auto token_a = json_hex_bytes(json, "tokenA", ADDRESS_LENGTH);
-        auto token_b = json_hex_bytes(json, "tokenB", ADDRESS_LENGTH);
+        auto address = json_hex_bytes(json, "address", kAddressLength);
+        auto token_a = json_hex_bytes(json, "tokenA", kAddressLength);
+        auto token_b = json_hex_bytes(json, "tokenB", kAddressLength);
         if (!address || !token_a || !token_b) {
             return std::nullopt;
         }
