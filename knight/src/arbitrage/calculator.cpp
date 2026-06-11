@@ -20,10 +20,9 @@ struct RouteQuote final
     intx::uint256 amount_out_b{};
 };
 
-std::optional<intx::uint256> amount_out(
-    const intx::uint256& amount_in,
-    const intx::uint256& reserve_in,
-    const intx::uint256& reserve_out)
+std::optional<intx::uint256> amount_out(const intx::uint256& amount_in,
+                                        const intx::uint256& reserve_in,
+                                        const intx::uint256& reserve_out)
 {
     if (amount_in == 0 || reserve_in == 0 || reserve_out == 0) {
         return std::nullopt;
@@ -43,26 +42,26 @@ intx::uint256 apply_bps(const intx::uint256& value, uint16_t bps)
     return value * intx::uint256{bps} / intx::uint256{BPS_DENOMINATOR};
 }
 
-const candidate::PoolSnapshot* find_pool_snapshot(
-    const candidate::StateSnapshot& state,
-    const candidate::Candidate& candidate)
+const candidate::PoolSnapshot* find_pool_snapshot(const candidate::StateSnapshot& state,
+                                                  const candidate::Candidate& candidate)
 {
-    const auto it = std::find_if(state.pools.begin(), state.pools.end(), [&candidate](const auto& pool_snapshot) {
-        return pool_snapshot.pool.address == candidate.pool.address;
-    });
+    const auto it = std::find_if(
+        state.pools.begin(), state.pools.end(), [&candidate](const auto& pool_snapshot) {
+            return pool_snapshot.pool.address == candidate.pool.address;
+        });
 
     return it == state.pools.end() ? nullptr : &*it;
 }
 
 std::optional<candidate::PoolSnapshot> apply_victim_swap(
-    const candidate::PoolSnapshot& pool_snapshot,
-    const decoder::Swap& swap)
+    const candidate::PoolSnapshot& pool_snapshot, const decoder::Swap& swap)
 {
     if (std::holds_alternative<evm::SandboxDex::SwapExactAForB>(swap)) {
         const auto& decoded_swap = std::get<evm::SandboxDex::SwapExactAForB>(swap);
-        auto amount_out_b = amount_out(decoded_swap.amount_in, pool_snapshot.reserve_a, pool_snapshot.reserve_b);
-        if (!amount_out_b || *amount_out_b < decoded_swap.min_amount_out
-            || pool_snapshot.reserve_b < *amount_out_b) {
+        auto amount_out_b =
+            amount_out(decoded_swap.amount_in, pool_snapshot.reserve_a, pool_snapshot.reserve_b);
+        if (!amount_out_b || *amount_out_b < decoded_swap.min_amount_out ||
+            pool_snapshot.reserve_b < *amount_out_b) {
             return std::nullopt;
         }
 
@@ -75,9 +74,10 @@ std::optional<candidate::PoolSnapshot> apply_victim_swap(
 
     if (std::holds_alternative<evm::SandboxDex::SwapExactBForA>(swap)) {
         const auto& decoded_swap = std::get<evm::SandboxDex::SwapExactBForA>(swap);
-        auto amount_out_a = amount_out(decoded_swap.amount_in, pool_snapshot.reserve_b, pool_snapshot.reserve_a);
-        if (!amount_out_a || *amount_out_a < decoded_swap.min_amount_out
-            || pool_snapshot.reserve_a < *amount_out_a) {
+        auto amount_out_a =
+            amount_out(decoded_swap.amount_in, pool_snapshot.reserve_b, pool_snapshot.reserve_a);
+        if (!amount_out_a || *amount_out_a < decoded_swap.min_amount_out ||
+            pool_snapshot.reserve_a < *amount_out_a) {
             return std::nullopt;
         }
 
@@ -91,10 +91,9 @@ std::optional<candidate::PoolSnapshot> apply_victim_swap(
     return std::nullopt;
 }
 
-std::optional<RouteQuote> quote_route(
-    const candidate::PoolSnapshot& buy_pool,
-    const candidate::PoolSnapshot& sell_pool,
-    const intx::uint256& amount_in_b)
+std::optional<RouteQuote> quote_route(const candidate::PoolSnapshot& buy_pool,
+                                      const candidate::PoolSnapshot& sell_pool,
+                                      const intx::uint256& amount_in_b)
 {
     auto amount_out_a = amount_out(amount_in_b, buy_pool.reserve_b, buy_pool.reserve_a);
     if (!amount_out_a) {
@@ -113,10 +112,9 @@ std::optional<RouteQuote> quote_route(
     };
 }
 
-std::optional<intx::uint256> optimal_amount_in_b(
-    const candidate::PoolSnapshot& buy_pool,
-    const candidate::PoolSnapshot& sell_pool,
-    const Params& params)
+std::optional<intx::uint256> optimal_amount_in_b(const candidate::PoolSnapshot& buy_pool,
+                                                 const candidate::PoolSnapshot& sell_pool,
+                                                 const Params& params)
 {
     const intx::uint<1024> fee_numerator{evm::SandboxDex::fee_numerator};
     const intx::uint<1024> fee_denominator{evm::SandboxDex::fee_denominator};
@@ -125,12 +123,13 @@ std::optional<intx::uint256> optimal_amount_in_b(
 
     // For B -> A -> B routes, amountOutB(x) = C*x / (D + E*x).
     // The unconstrained continuous optimum is (sqrt(C*D) - D) / E.
-    const intx::uint<1024> c =
-        fee_numerator_squared * intx::uint<1024>{buy_pool.reserve_a} * intx::uint<1024>{sell_pool.reserve_b};
-    const intx::uint<1024> d =
-        fee_denominator_squared * intx::uint<1024>{buy_pool.reserve_b} * intx::uint<1024>{sell_pool.reserve_a};
-    const intx::uint<1024> e = fee_numerator * fee_denominator * intx::uint<1024>{sell_pool.reserve_a}
-        + fee_numerator_squared * intx::uint<1024>{buy_pool.reserve_a};
+    const intx::uint<1024> c = fee_numerator_squared * intx::uint<1024>{buy_pool.reserve_a} *
+                               intx::uint<1024>{sell_pool.reserve_b};
+    const intx::uint<1024> d = fee_denominator_squared * intx::uint<1024>{buy_pool.reserve_b} *
+                               intx::uint<1024>{sell_pool.reserve_a};
+    const intx::uint<1024> e =
+        fee_numerator * fee_denominator * intx::uint<1024>{sell_pool.reserve_a} +
+        fee_numerator_squared * intx::uint<1024>{buy_pool.reserve_a};
 
     if (c == 0 || d == 0 || e == 0) {
         return std::nullopt;
@@ -154,10 +153,9 @@ std::optional<intx::uint256> optimal_amount_in_b(
     return intx::uint256{amount_in_b};
 }
 
-std::optional<RouteQuote> best_route_quote(
-    const candidate::PoolSnapshot& buy_pool,
-    const candidate::PoolSnapshot& sell_pool,
-    const Params& params)
+std::optional<RouteQuote> best_route_quote(const candidate::PoolSnapshot& buy_pool,
+                                           const candidate::PoolSnapshot& sell_pool,
+                                           const Params& params)
 {
     const auto optimal_amount = optimal_amount_in_b(buy_pool, sell_pool, params);
     if (!optimal_amount) {
@@ -167,10 +165,9 @@ std::optional<RouteQuote> best_route_quote(
     return quote_route(buy_pool, sell_pool, *optimal_amount);
 }
 
-std::optional<Opportunity> evaluate_pool(
-    const candidate::PoolSnapshot& buy_pool,
-    const candidate::PoolSnapshot& sell_pool,
-    const Params& params)
+std::optional<Opportunity> evaluate_pool(const candidate::PoolSnapshot& buy_pool,
+                                         const candidate::PoolSnapshot& sell_pool,
+                                         const Params& params)
 {
     auto quote = best_route_quote(buy_pool, sell_pool, params);
     if (!quote || quote->amount_out_b <= quote->amount_in_b) {
@@ -202,11 +199,10 @@ bool is_better(const Opportunity& lhs, const Opportunity& rhs)
 
 } // namespace
 
-std::optional<Opportunity> find_arbitrage(
-    const candidate::StateSnapshot& state,
-    const candidate::Candidate& candidate,
-    const decoder::Swap& swap,
-    const Params& params)
+std::optional<Opportunity> find_arbitrage(const candidate::StateSnapshot& state,
+                                          const candidate::Candidate& candidate,
+                                          const decoder::Swap& swap,
+                                          const Params& params)
 {
     if (params.min_output_bps > BPS_DENOMINATOR) {
         return std::nullopt;

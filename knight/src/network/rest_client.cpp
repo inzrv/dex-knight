@@ -11,16 +11,13 @@
 namespace network
 {
 
-RestClient::RestClient(net::io_context& io_ctx,
-                       bool use_tls,
-                       bool verify_tls_peer,
-                       std::string host,
-                       std::string port)
-    : m_io_ctx(io_ctx)
-    , m_use_tls(use_tls)
-    , m_verify_tls_peer(verify_tls_peer)
-    , m_host(std::move(host))
-    , m_port(std::move(port))
+RestClient::RestClient(
+    net::io_context& io_ctx, bool use_tls, bool verify_tls_peer, std::string host, std::string port)
+    : m_io_ctx(io_ctx),
+      m_use_tls(use_tls),
+      m_verify_tls_peer(verify_tls_peer),
+      m_host(std::move(host)),
+      m_port(std::move(port))
 {}
 
 std::expected<std::string, RestError> RestClient::get(std::string_view target) const
@@ -32,7 +29,8 @@ std::expected<std::string, RestError> RestClient::get(std::string_view target) c
     return get_plain(target);
 }
 
-std::expected<std::string, RestError> RestClient::post(std::string_view target, std::string_view body) const
+std::expected<std::string, RestError> RestClient::post(std::string_view target,
+                                                       std::string_view body) const
 {
     if (m_use_tls) {
         return post_tls(target, body);
@@ -169,7 +167,8 @@ std::expected<std::string, RestError> RestClient::get_tls(std::string_view targe
     return std::move(res.body());
 }
 
-std::expected<std::string, RestError> RestClient::post_plain(std::string_view target, std::string_view body) const
+std::expected<std::string, RestError> RestClient::post_plain(std::string_view target,
+                                                             std::string_view body) const
 {
     log::debug("RestClient", "POST http://{}:{}{}", m_host, m_port, target);
     beast::error_code ec;
@@ -212,9 +211,8 @@ std::expected<std::string, RestError> RestClient::post_plain(std::string_view ta
 
     if (res.result() != http::status::ok) {
         log::warn("RestClient", "status: {}", static_cast<int>(res.result()));
-        const auto error = res.result() == http::status::conflict
-            ? RestError::CONFLICT
-            : RestError::BAD_STATUS;
+        const auto error =
+            res.result() == http::status::conflict ? RestError::CONFLICT : RestError::BAD_STATUS;
         return std::unexpected(error);
     }
 
@@ -227,7 +225,8 @@ std::expected<std::string, RestError> RestClient::post_plain(std::string_view ta
     return std::move(res.body());
 }
 
-std::expected<std::string, RestError> RestClient::post_tls(std::string_view target, std::string_view body) const
+std::expected<std::string, RestError> RestClient::post_tls(std::string_view target,
+                                                           std::string_view body) const
 {
     log::debug("RestClient", "POST https://{}:{}{}", m_host, m_port, target);
     beast::error_code ec;
@@ -294,9 +293,8 @@ std::expected<std::string, RestError> RestClient::post_tls(std::string_view targ
 
     if (res.result() != http::status::ok) {
         log::warn("RestClient", "status: {}", static_cast<int>(res.result()));
-        const auto error = res.result() == http::status::conflict
-            ? RestError::CONFLICT
-            : RestError::BAD_STATUS;
+        const auto error =
+            res.result() == http::status::conflict ? RestError::CONFLICT : RestError::BAD_STATUS;
         return std::unexpected(error);
     }
 

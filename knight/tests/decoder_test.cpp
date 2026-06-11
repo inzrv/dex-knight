@@ -11,9 +11,10 @@ using namespace test;
 
 TEST(DecoderTest, DecodesSwapExactAForB)
 {
-    const auto input = solabi::from_hex("4cabca0a"
-                                        "000000000000000000000000000000000000000000000000000000000000007b"
-                                        "000000000000000000000000000000000000000000000000000000000000002d");
+    const auto input =
+        solabi::from_hex("4cabca0a"
+                         "000000000000000000000000000000000000000000000000000000000000007b"
+                         "000000000000000000000000000000000000000000000000000000000000002d");
     auto candidate = make_candidate(make_pool(), candidate::SwapKind::A_FOR_B, input);
 
     auto decoded = decoder::decode_swap(candidate);
@@ -28,9 +29,10 @@ TEST(DecoderTest, DecodesSwapExactAForB)
 
 TEST(DecoderTest, DecodesSwapExactBForA)
 {
-    const auto input = solabi::from_hex("dd4f1611"
-                                        "00000000000000000000000000000000000000000000000000000000000003db"
-                                        "0000000000000000000000000000000000000000000000000000000000000041");
+    const auto input =
+        solabi::from_hex("dd4f1611"
+                         "00000000000000000000000000000000000000000000000000000000000003db"
+                         "0000000000000000000000000000000000000000000000000000000000000041");
     auto candidate = make_candidate(make_pool(), candidate::SwapKind::B_FOR_A, input);
 
     auto decoded = decoder::decode_swap(candidate);
@@ -45,9 +47,10 @@ TEST(DecoderTest, DecodesSwapExactBForA)
 
 TEST(DecoderTest, RejectsSelectorThatDoesNotMatchCandidateKind)
 {
-    const auto input = solabi::from_hex("dd4f1611"
-                                        "0000000000000000000000000000000000000000000000000000000000000064"
-                                        "0000000000000000000000000000000000000000000000000000000000000000");
+    const auto input =
+        solabi::from_hex("dd4f1611"
+                         "0000000000000000000000000000000000000000000000000000000000000064"
+                         "0000000000000000000000000000000000000000000000000000000000000000");
     auto candidate = make_candidate(make_pool(), candidate::SwapKind::A_FOR_B, input);
 
     EXPECT_FALSE(decoder::decode_swap(candidate));
@@ -55,8 +58,9 @@ TEST(DecoderTest, RejectsSelectorThatDoesNotMatchCandidateKind)
 
 TEST(DecoderTest, RejectsMalformedCalldata)
 {
-    const auto input = solabi::from_hex("4cabca0a"
-                                        "0000000000000000000000000000000000000000000000000000000000000064");
+    const auto input =
+        solabi::from_hex("4cabca0a"
+                         "0000000000000000000000000000000000000000000000000000000000000064");
     auto candidate = make_candidate(make_pool(), candidate::SwapKind::A_FOR_B, input);
 
     EXPECT_FALSE(decoder::decode_swap(candidate));

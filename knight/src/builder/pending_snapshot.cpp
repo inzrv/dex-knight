@@ -7,7 +7,8 @@
 namespace builder
 {
 
-std::optional<PendingSnapshot> PendingSnapshot::from_json(const boost::json::object& json, uint64_t block_number)
+std::optional<PendingSnapshot> PendingSnapshot::from_json(const boost::json::object& json,
+                                                          uint64_t block_number)
 {
     const auto snapshot_seq = json_uint64(json, "snapshotSeq");
     const auto* transactions = json_array(json, "transactions");

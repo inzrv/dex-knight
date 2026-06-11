@@ -13,8 +13,7 @@ Simulator::Simulator(Config config, boost::asio::io_context& io_ctx)
 {}
 
 std::expected<builder::BundleSimulationResult, builder::Error> Simulator::simulate(
-    const candidate::Candidate& candidate,
-    std::optional<uint64_t> block_number) const
+    const candidate::Candidate& candidate, std::optional<uint64_t> block_number) const
 {
     builder::Bundle bundle;
     bundle.block_number = block_number;

@@ -24,20 +24,20 @@ std::optional<Swap> decode_swap(const candidate::Candidate& candidate)
 
     try {
         switch (candidate.swap_kind) {
-            case candidate::SwapKind::A_FOR_B: {
-                const auto& expected = evm::SandboxDex::SwapExactAForB::selector;
-                if (bytes_view(expected.data(), expected.size()) != selector) {
-                    return std::nullopt;
-                }
-                return solabi::decode<evm::SandboxDex::SwapExactAForB>(calldata);
+        case candidate::SwapKind::A_FOR_B: {
+            const auto& expected = evm::SandboxDex::SwapExactAForB::selector;
+            if (bytes_view(expected.data(), expected.size()) != selector) {
+                return std::nullopt;
             }
-            case candidate::SwapKind::B_FOR_A: {
-                const auto& expected = evm::SandboxDex::SwapExactBForA::selector;
-                if (bytes_view(expected.data(), expected.size()) != selector) {
-                    return std::nullopt;
-                }
-                return solabi::decode<evm::SandboxDex::SwapExactBForA>(calldata);
+            return solabi::decode<evm::SandboxDex::SwapExactAForB>(calldata);
+        }
+        case candidate::SwapKind::B_FOR_A: {
+            const auto& expected = evm::SandboxDex::SwapExactBForA::selector;
+            if (bytes_view(expected.data(), expected.size()) != selector) {
+                return std::nullopt;
             }
+            return solabi::decode<evm::SandboxDex::SwapExactBForA>(calldata);
+        }
         }
     } catch (const std::exception& /*e*/) {
         return std::nullopt;

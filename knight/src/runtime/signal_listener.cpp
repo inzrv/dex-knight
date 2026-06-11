@@ -14,9 +14,12 @@ namespace
 const char* signal_to_string(int signal) noexcept
 {
     switch (signal) {
-        case SIGINT: return "SIGINT";
-        case SIGTERM: return "SIGTERM";
-        default: return "UNKNOWN";
+    case SIGINT:
+        return "SIGINT";
+    case SIGTERM:
+        return "SIGTERM";
+    default:
+        return "UNKNOWN";
     }
 }
 
@@ -24,8 +27,7 @@ const char* signal_to_string(int signal) noexcept
 
 SignalListener::SignalListener(handler_t handler)
     : m_handler(std::move(handler))
-{
-}
+{}
 
 SignalListener::~SignalListener()
 {

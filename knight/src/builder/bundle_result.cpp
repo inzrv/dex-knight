@@ -22,8 +22,10 @@ std::optional<BundleStatus> bundle_status_from_string(std::string_view status) n
 std::string_view bundle_status_to_string(BundleStatus status) noexcept
 {
     switch (status) {
-        case BundleStatus::INCLUDED: return "included";
-        case BundleStatus::FAILED: return "failed";
+    case BundleStatus::INCLUDED:
+        return "included";
+    case BundleStatus::FAILED:
+        return "failed";
     }
 
     return "unknown";

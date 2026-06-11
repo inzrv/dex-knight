@@ -25,11 +25,11 @@ public:
     std::expected<std::string, Error> simulate_bundle(const Bundle& bundle) const;
 
 private:
-    std::expected<std::string, Error> get_with_retry(std::string_view target, std::string_view label) const;
-    std::expected<std::string, Error> post_with_retry(
-        std::string_view target,
-        std::string_view body,
-        std::string_view label) const;
+    std::expected<std::string, Error> get_with_retry(std::string_view target,
+                                                     std::string_view label) const;
+    std::expected<std::string, Error> post_with_retry(std::string_view target,
+                                                      std::string_view body,
+                                                      std::string_view label) const;
 
 private:
     Config m_config;

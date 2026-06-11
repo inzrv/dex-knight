@@ -15,11 +15,7 @@ RestClient::RestClient(Config config, net::io_context& io_ctx)
 {
     const auto& endpoint = m_config.builder_rest_endpoint;
     m_rest_client = std::make_unique<network::RestClient>(
-        io_ctx,
-        endpoint.use_tls,
-        m_config.tls_verify_peer,
-        endpoint.host,
-        endpoint.port);
+        io_ctx, endpoint.use_tls, m_config.tls_verify_peer, endpoint.host, endpoint.port);
 }
 
 std::expected<std::string, Error> RestClient::request_snapshot() const
@@ -32,7 +28,8 @@ std::expected<std::string, Error> RestClient::request_chain_head() const
     return get_with_retry(kChainHeadTarget, "chain head");
 }
 
-std::expected<std::string, Error> RestClient::request_chain_call(const boost::json::object& payload) const
+std::expected<std::string, Error> RestClient::request_chain_call(
+    const boost::json::object& payload) const
 {
     const auto body = boost::json::serialize(payload);
     return post_with_retry(kChainCallTarget, body, "chain call");
@@ -44,7 +41,8 @@ std::expected<std::string, Error> RestClient::simulate_bundle(const Bundle& bund
     return post_with_retry(kBundleSimulationTarget, body, "bundle simulation");
 }
 
-std::expected<std::string, Error> RestClient::get_with_retry(std::string_view target, std::string_view label) const
+std::expected<std::string, Error> RestClient::get_with_retry(std::string_view target,
+                                                             std::string_view label) const
 {
     auto last_error = network::RestError::UNKNOWN_ERROR;
 
@@ -84,10 +82,9 @@ std::expected<std::string, Error> RestClient::get_with_retry(std::string_view ta
     return std::unexpected(Error::REQUEST_ERROR);
 }
 
-std::expected<std::string, Error> RestClient::post_with_retry(
-    std::string_view target,
-    std::string_view body,
-    std::string_view label) const
+std::expected<std::string, Error> RestClient::post_with_retry(std::string_view target,
+                                                              std::string_view body,
+                                                              std::string_view label) const
 {
     auto last_error = network::RestError::UNKNOWN_ERROR;
 

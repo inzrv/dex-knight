@@ -10,11 +10,9 @@
 namespace candidate
 {
 
-BlockSyncer::BlockSyncer(Config config,
-                         net::io_context& io_ctx,
-                         new_block_handler_t on_new_block)
-    : m_builder_rest_client(std::make_unique<builder::RestClient>(std::move(config), io_ctx))
-    , m_on_new_block(std::move(on_new_block))
+BlockSyncer::BlockSyncer(Config config, net::io_context& io_ctx, new_block_handler_t on_new_block)
+    : m_builder_rest_client(std::make_unique<builder::RestClient>(std::move(config), io_ctx)),
+      m_on_new_block(std::move(on_new_block))
 {}
 
 BlockSyncer::~BlockSyncer()
@@ -121,7 +119,9 @@ std::optional<uint64_t> BlockSyncer::fetch_last_block() const
 {
     const auto head_res = m_builder_rest_client->request_chain_head();
     if (!head_res) {
-        log::warn("BlockSyncer", "failed to request chain head: {}", builder::error_to_string(head_res.error()));
+        log::warn("BlockSyncer",
+                  "failed to request chain head: {}",
+                  builder::error_to_string(head_res.error()));
         return std::nullopt;
     }
 
@@ -137,7 +137,9 @@ std::optional<uint64_t> BlockSyncer::fetch_last_block() const
 bool BlockSyncer::publish_new_block(uint64_t block_number)
 {
     if (!m_on_new_block) {
-        log::warn("BlockSyncer", "drop new block because no handler is configured: block_number={}", block_number);
+        log::warn("BlockSyncer",
+                  "drop new block because no handler is configured: block_number={}",
+                  block_number);
         return false;
     }
 

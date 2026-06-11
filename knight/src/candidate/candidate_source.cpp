@@ -33,24 +33,23 @@ std::vector<evm::Pool> make_pools(const std::vector<PoolConfig>& pools)
 } // namespace
 
 CandidateSource::CandidateSource(Config config, net::io_context& io_ctx)
-    : m_config(std::move(config))
-    , m_io_ctx(io_ctx)
-    , m_pending_queue(std::make_shared<Queue<Event, 10'000>>())
-    , m_builder_rest_client(std::make_unique<builder::RestClient>(m_config, m_io_ctx))
-    , m_pending_feed(std::make_unique<builder::PendingFeed>(
-        m_config,
-        m_io_ctx,
-        [this](builder::PendingTransaction transaction) {
-            publish_pending_transaction(std::move(transaction));
-        }))
-    , m_block_syncer(std::make_unique<BlockSyncer>(
-        m_config,
-        m_io_ctx,
-        [this](uint64_t block_number) {
-            publish_new_block(block_number);
-        }))
-    , m_pools(make_pools(m_config.pools))
-    , m_candidate_filter(m_pools)
+    : m_config(std::move(config)),
+      m_io_ctx(io_ctx),
+      m_pending_queue(std::make_shared<Queue<Event, 10'000>>()),
+      m_builder_rest_client(std::make_unique<builder::RestClient>(m_config, m_io_ctx)),
+      m_pending_feed(std::make_unique<builder::PendingFeed>(
+          m_config,
+          m_io_ctx,
+          [this](builder::PendingTransaction transaction) {
+              publish_pending_transaction(std::move(transaction));
+          })),
+      m_block_syncer(std::make_unique<BlockSyncer>(m_config,
+                                                   m_io_ctx,
+                                                   [this](uint64_t block_number) {
+                                                       publish_new_block(block_number);
+                                                   })),
+      m_pools(make_pools(m_config.pools)),
+      m_candidate_filter(m_pools)
 {}
 
 CandidateSource::~CandidateSource()
@@ -104,7 +103,9 @@ void CandidateSource::run()
 
     const auto block_sync_res = m_block_syncer->wait_until_ready(std::chrono::seconds{10});
     if (!block_sync_res) {
-        log::error("CandidateSource", "failed to start block syncer: {}", candidate::error_to_string(block_sync_res.error()));
+        log::error("CandidateSource",
+                   "failed to start block syncer: {}",
+                   candidate::error_to_string(block_sync_res.error()));
         stop_inputs();
         close_state_waiters();
         return;
@@ -117,7 +118,9 @@ void CandidateSource::run()
 
     const auto wait_res = m_pending_feed->wait_until_ready(std::chrono::seconds{10});
     if (!wait_res) {
-        log::error("CandidateSource", "failed to open builder pending feed: {}", builder::error_to_string(wait_res.error()));
+        log::error("CandidateSource",
+                   "failed to open builder pending feed: {}",
+                   builder::error_to_string(wait_res.error()));
         stop_inputs();
         close_state_waiters();
         return;
@@ -165,7 +168,10 @@ std::expected<void, Error> CandidateSource::run_core_loop()
 
 void CandidateSource::handle_new_block_event(const NewBlockEvent& event)
 {
-    log::info("CandidateSource", "new block event: source={} block_number={}", event.source, event.block_number);
+    log::info("CandidateSource",
+              "new block event: source={} block_number={}",
+              event.source,
+              event.block_number);
 
     auto pool_snapshots = request_pool_snapshots(event.block_number);
     if (!pool_snapshots) {
@@ -178,7 +184,9 @@ void CandidateSource::handle_new_block_event(const NewBlockEvent& event)
 
     const auto snapshot_res = m_builder_rest_client->request_snapshot();
     if (!snapshot_res) {
-        log::warn("CandidateSource", "failed to request pending snapshot: {}", builder::error_to_string(snapshot_res.error()));
+        log::warn("CandidateSource",
+                  "failed to request pending snapshot: {}",
+                  builder::error_to_string(snapshot_res.error()));
         mark_state_invalid(event.block_number);
         return;
     }
@@ -201,12 +209,15 @@ void CandidateSource::handle_new_block_event(const NewBlockEvent& event)
     const auto snapshot_seq = candidate_snapshot.snapshot_seq;
     const auto candidate_count = candidate_snapshot.candidates.size();
     const auto pool_count = pool_snapshots->size();
-    const bool applied = apply_state_snapshot(std::move(candidate_snapshot), std::move(*pool_snapshots));
+    const bool applied =
+        apply_state_snapshot(std::move(candidate_snapshot), std::move(*pool_snapshots));
     if (!applied) {
         const auto current_block = m_state.block_number();
-        const auto current_block_text = current_block ? std::to_string(*current_block) : std::string{"none"};
+        const auto current_block_text =
+            current_block ? std::to_string(*current_block) : std::string{"none"};
         log::debug("CandidateSource",
-                   "ignored stale pending snapshot: block_number={} snapshot_seq={} current_block_number={} current_snapshot_seq={}",
+                   "ignored stale pending snapshot: block_number={} snapshot_seq={} "
+                   "current_block_number={} current_snapshot_seq={}",
                    event.block_number,
                    snapshot_seq,
                    current_block_text,
@@ -227,21 +238,26 @@ void CandidateSource::handle_pending_tx_event(PendingTransactionEvent event)
     const auto seq_num = event.tx.seq_num;
     auto candidate = m_candidate_filter.filter(std::move(event.tx));
     if (!candidate) {
-        log::debug("CandidateSource", "ignored pending tx event outside filter: seq_num={}", seq_num);
+        log::debug(
+            "CandidateSource", "ignored pending tx event outside filter: seq_num={}", seq_num);
         return;
     }
 
     const bool accepted = apply_pending_candidate(std::move(*candidate));
     if (!accepted) {
         log::debug("CandidateSource",
-                   "ignored pending tx event covered by snapshot or invalid state: seq_num={} snapshot_seq={} valid={}",
+                   "ignored pending tx event covered by snapshot or invalid state: seq_num={} "
+                   "snapshot_seq={} valid={}",
                    seq_num,
                    m_state.snapshot_seq(),
                    m_state.valid());
         return;
     }
 
-    log::info("CandidateSource", "pending tx candidate accepted: seq_num={} candidates={}", seq_num, m_state.size());
+    log::info("CandidateSource",
+              "pending tx candidate accepted: seq_num={} candidates={}",
+              seq_num,
+              m_state.size());
 }
 
 void CandidateSource::publish_new_block(uint64_t block_number)
@@ -271,7 +287,8 @@ void CandidateSource::publish_pending_transaction(builder::PendingTransaction tr
     }
 }
 
-std::optional<std::vector<PoolSnapshot>> CandidateSource::request_pool_snapshots(uint64_t block_number) const
+std::optional<std::vector<PoolSnapshot>> CandidateSource::request_pool_snapshots(
+    uint64_t block_number) const
 {
     std::vector<PoolSnapshot> result;
     result.reserve(m_pools.size());
@@ -338,7 +355,8 @@ bool CandidateSource::mark_state_invalid(uint64_t block_number)
     return marked;
 }
 
-bool CandidateSource::apply_state_snapshot(CandidateSnapshot snapshot, std::vector<PoolSnapshot> pools)
+bool CandidateSource::apply_state_snapshot(CandidateSnapshot snapshot,
+                                           std::vector<PoolSnapshot> pools)
 {
     bool applied = false;
     bool should_notify = false;

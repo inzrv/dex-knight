@@ -20,8 +20,10 @@ enum class SwapKind
 inline std::string_view swap_kind_to_string(SwapKind kind) noexcept
 {
     switch (kind) {
-        case SwapKind::A_FOR_B: return "A_FOR_B";
-        case SwapKind::B_FOR_A: return "B_FOR_A";
+    case SwapKind::A_FOR_B:
+        return "A_FOR_B";
+    case SwapKind::B_FOR_A:
+        return "B_FOR_A";
     }
 
     return "UNKNOWN_SWAP_KIND";

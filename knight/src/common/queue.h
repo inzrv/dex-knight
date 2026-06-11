@@ -7,7 +7,7 @@
 #include <optional>
 #include <utility>
 
-template<typename T>
+template <typename T>
 class IQueue
 {
 public:
@@ -17,7 +17,7 @@ public:
     virtual void close() = 0;
 };
 
-template<typename T, size_t Capacity>
+template <typename T, size_t Capacity>
 class Queue final : public IQueue<T>
 {
 public:

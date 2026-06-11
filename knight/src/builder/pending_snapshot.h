@@ -17,7 +17,8 @@ struct PendingSnapshot final
     uint64_t snapshot_seq{0};
     std::vector<PendingTransaction> transactions;
 
-    static std::optional<PendingSnapshot> from_json(const boost::json::object& json, uint64_t block_number);
+    static std::optional<PendingSnapshot> from_json(const boost::json::object& json,
+                                                    uint64_t block_number);
 };
 
 } // namespace builder

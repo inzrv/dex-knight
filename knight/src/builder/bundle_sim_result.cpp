@@ -7,7 +7,8 @@
 namespace builder
 {
 
-std::optional<BundleSimulationResult> BundleSimulationResult::from_json(const boost::json::value& value)
+std::optional<BundleSimulationResult> BundleSimulationResult::from_json(
+    const boost::json::value& value)
 {
     if (!value.is_object()) {
         return std::nullopt;

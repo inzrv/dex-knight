@@ -37,8 +37,9 @@ inline evm::Pool make_pool(std::string_view address_hex = kPool1Address)
     };
 }
 
-inline candidate::Candidate make_candidate(
-    const evm::Pool& pool, candidate::SwapKind swap_kind, bytes input = {})
+inline candidate::Candidate make_candidate(const evm::Pool& pool,
+                                           candidate::SwapKind swap_kind,
+                                           bytes input = {})
 {
     builder::PendingTransaction tx;
     tx.mempool_tx_id = "mp-test";
@@ -55,18 +56,18 @@ inline candidate::Candidate make_candidate(
     };
 }
 
-inline candidate::StateSnapshot make_state(
-    const evm::Pool& victim_pool,
-    const evm::Pool& other_pool,
-    const candidate::Candidate& candidate)
+inline candidate::StateSnapshot make_state(const evm::Pool& victim_pool,
+                                           const evm::Pool& other_pool,
+                                           const candidate::Candidate& candidate)
 {
     return candidate::StateSnapshot{
         .valid = true,
         .block_number = 1,
-        .pools = {
-            {.pool = victim_pool, .reserve_a = tokens(1'000), .reserve_b = tokens(1'000)},
-            {.pool = other_pool, .reserve_a = tokens(1'000), .reserve_b = tokens(1'000)},
-        },
+        .pools =
+            {
+                {.pool = victim_pool, .reserve_a = tokens(1'000), .reserve_b = tokens(1'000)},
+                {.pool = other_pool, .reserve_a = tokens(1'000), .reserve_b = tokens(1'000)},
+            },
         .candidate = candidate,
     };
 }

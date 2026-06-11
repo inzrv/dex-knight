@@ -15,9 +15,12 @@ enum class Error
 inline std::string_view error_to_string(Error error) noexcept
 {
     switch (error) {
-        case Error::REQUEST_ERROR: return "REQUEST_ERROR";
-        case Error::TIMEOUT: return "TIMEOUT";
-        case Error::CLOSED: return "CLOSED";
+    case Error::REQUEST_ERROR:
+        return "REQUEST_ERROR";
+    case Error::TIMEOUT:
+        return "TIMEOUT";
+    case Error::CLOSED:
+        return "CLOSED";
     }
 
     return "UNKNOWN_CANDIDATE_ERROR";

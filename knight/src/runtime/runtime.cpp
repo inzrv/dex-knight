@@ -27,7 +27,8 @@ constexpr uint64_t MAX_ARBITRAGE_AMOUNT_IN_B_TOKENS{1'000'000};
 arbitrage::Params make_default_arbitrage_params()
 {
     return arbitrage::Params{
-        .max_amount_in_b = intx::uint256{MAX_ARBITRAGE_AMOUNT_IN_B_TOKENS} * intx::uint256{TOKEN_UNIT},
+        .max_amount_in_b =
+            intx::uint256{MAX_ARBITRAGE_AMOUNT_IN_B_TOKENS} * intx::uint256{TOKEN_UNIT},
         .min_profit_b = intx::uint256{0},
         .min_output_bps = 0,
     };
@@ -36,8 +37,8 @@ arbitrage::Params make_default_arbitrage_params()
 } // namespace
 
 Runtime::Runtime(RuntimeFactory& factory)
-    : m_io_ctx()
-    , m_work_guard(net::make_work_guard(m_io_ctx))
+    : m_io_ctx(),
+      m_work_guard(net::make_work_guard(m_io_ctx))
 {
     auto components = factory.create(m_io_ctx);
     m_candidate_source = std::move(components.candidate_source);
@@ -93,24 +94,29 @@ void Runtime::run_core_loop()
                 break;
             }
 
-            log::warn("Runtime", "failed to receive state snapshot: {}", candidate::error_to_string(state.error()));
+            log::warn("Runtime",
+                      "failed to receive state snapshot: {}",
+                      candidate::error_to_string(state.error()));
             continue;
         }
 
-        const auto block_number_str = state->block_number ? std::to_string(*state->block_number) : std::string{"none"};
+        const auto block_number_str =
+            state->block_number ? std::to_string(*state->block_number) : std::string{"none"};
         if (!state->valid) {
             log::warn("Runtime", "state snapshot invalid: block_number={}", block_number_str);
             continue;
         }
 
         if (!state->candidate) {
-            log::debug("Runtime", "state snapshot has no candidate: block_number={}", block_number_str);
+            log::debug(
+                "Runtime", "state snapshot has no candidate: block_number={}", block_number_str);
             continue;
         }
 
         const auto& current_candidate = *state->candidate;
         log::info("Runtime",
-                  "candidate state received: block_number={} pools={} mempool_tx_id={} seq_num={} swap_kind={}",
+                  "candidate state received: block_number={} pools={} mempool_tx_id={} seq_num={} "
+                  "swap_kind={}",
                   block_number_str,
                   state->pools.size(),
                   current_candidate.tx.mempool_tx_id,
@@ -125,21 +131,26 @@ void Runtime::run_core_loop()
             continue;
         }
 
-        std::visit([](const auto& s) {
-            log::info("Runtime",
-                      "candidate swap: amount_in={} min_amount_out={}",
-                      hex_quantity(s.amount_in),
-                      hex_quantity(s.min_amount_out));
-        }, *swap);
+        std::visit(
+            [](const auto& s) {
+                log::info("Runtime",
+                          "candidate swap: amount_in={} min_amount_out={}",
+                          hex_quantity(s.amount_in),
+                          hex_quantity(s.min_amount_out));
+            },
+            *swap);
 
         auto simulation = m_simulator->simulate(current_candidate, state->block_number);
         if (!simulation) {
             if (simulation.error() == builder::Error::CANDIDATE_NOT_PENDING) {
-                log::info("Runtime",
-                          "candidate simulation skipped: mempool_tx_id={} already mined or canceled",
-                          current_candidate.tx.mempool_tx_id);
+                log::info(
+                    "Runtime",
+                    "candidate simulation skipped: mempool_tx_id={} already mined or canceled",
+                    current_candidate.tx.mempool_tx_id);
             } else {
-                log::warn("Runtime", "candidate simulation failed: {}", builder::error_to_string(simulation.error()));
+                log::warn("Runtime",
+                          "candidate simulation failed: {}",
+                          builder::error_to_string(simulation.error()));
             }
             continue;
         }
@@ -159,15 +170,17 @@ void Runtime::run_core_loop()
         }
 
         if (simulation->status != builder::BundleStatus::INCLUDED) {
-            log::debug("Runtime",
-                       "arbitrage calculation skipped: candidate simulation status={} mempool_tx_id={}",
-                       builder::bundle_status_to_string(simulation->status),
-                       current_candidate.tx.mempool_tx_id);
+            log::debug(
+                "Runtime",
+                "arbitrage calculation skipped: candidate simulation status={} mempool_tx_id={}",
+                builder::bundle_status_to_string(simulation->status),
+                current_candidate.tx.mempool_tx_id);
             continue;
         }
 
         const auto arbitrage_params = make_default_arbitrage_params();
-        auto opportunity = arbitrage::find_arbitrage(*state, current_candidate, *swap, arbitrage_params);
+        auto opportunity =
+            arbitrage::find_arbitrage(*state, current_candidate, *swap, arbitrage_params);
         if (!opportunity) {
             log::debug("Runtime",
                        "arbitrage opportunity not found: block_number={} mempool_tx_id={}",

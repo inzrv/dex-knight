@@ -33,9 +33,9 @@ std::optional<PendingTransaction> parse_pending_tx_event(std::string_view payloa
 PendingFeed::PendingFeed(Config config,
                          net::io_context& io_ctx,
                          pending_transaction_handler_t on_pending_transaction)
-    : m_config(std::move(config))
-    , m_io_ctx(io_ctx)
-    , m_on_pending_transaction(std::move(on_pending_transaction))
+    : m_config(std::move(config)),
+      m_io_ctx(io_ctx),
+      m_on_pending_transaction(std::move(on_pending_transaction))
 {
     const auto& endpoint = m_config.builder_ws_endpoint;
     log::info("PendingFeed", "mempool stream endpoint: {}", m_config.builder_ws_url);
@@ -55,8 +55,7 @@ PendingFeed::PendingFeed(Config config,
         },
         [this](network::WsSource::State state) {
             on_ws_state(state);
-        }
-    );
+        });
 }
 
 void PendingFeed::open()
@@ -94,7 +93,9 @@ void PendingFeed::on_ws_message(std::string payload)
     }
 
     if (!m_on_pending_transaction) {
-        log::warn("PendingFeed", "drop pending tx because no handler is configured: seq_num={}", candidate->seq_num);
+        log::warn("PendingFeed",
+                  "drop pending tx because no handler is configured: seq_num={}",
+                  candidate->seq_num);
         return;
     }
 
@@ -105,19 +106,19 @@ void PendingFeed::on_ws_state(network::WsSource::State state)
 {
     log::info("PendingFeed", "websocket state: {}", ws_source_state_to_string(state));
     switch (state) {
-        case network::WsSource::State::STOPPED:
-            set_state(State::CLOSED);
-            break;
-        case network::WsSource::State::STARTING:
-            break;
-        case network::WsSource::State::RUNNING:
-            set_state(State::OPEN);
-            break;
-        case network::WsSource::State::STOPPING:
-            break;
-        case network::WsSource::State::FAILED:
-            set_state(State::FAILED);
-            break;
+    case network::WsSource::State::STOPPED:
+        set_state(State::CLOSED);
+        break;
+    case network::WsSource::State::STARTING:
+        break;
+    case network::WsSource::State::RUNNING:
+        set_state(State::OPEN);
+        break;
+    case network::WsSource::State::STOPPING:
+        break;
+    case network::WsSource::State::FAILED:
+        set_state(State::FAILED);
+        break;
     }
 }
 

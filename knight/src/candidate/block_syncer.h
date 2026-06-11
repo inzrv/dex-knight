@@ -35,9 +35,7 @@ public:
 
     using new_block_handler_t = std::function<void(uint64_t)>;
 
-    BlockSyncer(Config config,
-                net::io_context& io_ctx,
-                new_block_handler_t on_new_block);
+    BlockSyncer(Config config, net::io_context& io_ctx, new_block_handler_t on_new_block);
     ~BlockSyncer() override;
 
     BlockSyncer(const BlockSyncer&) = delete;

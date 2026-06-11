@@ -36,10 +36,7 @@ std::optional<Log> Log::from_json(const boost::json::value& value)
     }
 
     return Log{
-        .address = std::move(*address),
-        .topics = std::move(topics),
-        .data = std::move(*data)
-    };
+        .address = std::move(*address), .topics = std::move(topics), .data = std::move(*data)};
 }
 
 boost::json::object Log::to_json() const

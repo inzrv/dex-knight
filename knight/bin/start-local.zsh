@@ -17,6 +17,24 @@ is_running() {
   kill -0 "${pid}" >/dev/null 2>&1
 }
 
+run_clang_format() {
+  if ! command -v clang-format >/dev/null 2>&1; then
+    echo "clang-format not found in PATH" >&2
+    exit 1
+  fi
+
+  local -a format_dirs
+  format_dirs=("${KNIGHT_DIR}/src")
+  if [[ -d "${KNIGHT_DIR}/tests" ]]; then
+    format_dirs+=("${KNIGHT_DIR}/tests")
+  fi
+
+  find "${format_dirs[@]}" \
+    -type f \
+    \( -name "*.h" -o -name "*.hpp" -o -name "*.cpp" -o -name "*.cc" -o -name "*.cxx" \) \
+    -exec clang-format -i {} +
+}
+
 mkdir -p "${RUNTIME_DIR}"
 cd "${KNIGHT_DIR}"
 
@@ -34,6 +52,9 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
   echo "Knight config not found: ${CONFIG_FILE}" >&2
   exit 1
 fi
+
+echo "Formatting Knight sources"
+run_clang_format
 
 echo "Building Knight"
 cmake -S "${KNIGHT_DIR}" -B "${BUILD_DIR}" -DBUILD_TESTING=ON

@@ -15,7 +15,8 @@ struct PoolSnapshot final
     intx::uint256 reserve_a;
     intx::uint256 reserve_b;
 
-    static std::optional<PoolSnapshot> from_json(const evm::Pool& pool, const boost::json::value& value);
+    static std::optional<PoolSnapshot> from_json(const evm::Pool& pool,
+                                                 const boost::json::value& value);
 };
 
 } // namespace candidate

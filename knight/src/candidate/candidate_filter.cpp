@@ -12,7 +12,8 @@ namespace
 
 bool starts_with_selector(const bytes& input, const bytes& selector)
 {
-    return input.size() >= selector.size() && std::equal(selector.begin(), selector.end(), input.begin());
+    return input.size() >= selector.size() &&
+           std::equal(selector.begin(), selector.end(), input.begin());
 }
 
 std::optional<SwapKind> swap_kind_from_input(const bytes& input)

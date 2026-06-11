@@ -25,9 +25,12 @@ std::optional<BundleTxStatus> bundle_tx_status_from_string(std::string_view stat
 std::string_view bundle_tx_status_to_string(BundleTxStatus status) noexcept
 {
     switch (status) {
-        case BundleTxStatus::INCLUDED: return "included";
-        case BundleTxStatus::REVERTED: return "reverted";
-        case BundleTxStatus::MISSING: return "missing";
+    case BundleTxStatus::INCLUDED:
+        return "included";
+    case BundleTxStatus::REVERTED:
+        return "reverted";
+    case BundleTxStatus::MISSING:
+        return "missing";
     }
 
     return "unknown";
@@ -69,14 +72,12 @@ std::optional<BundleTxResult> BundleTxResult::from_json(const boost::json::value
         receipt = std::move(*parsed_receipt);
     }
 
-    BundleTxResult result = {
-        .mempool_tx_id = std::move(*mempool_tx_id),
-        .chain_tx_hash = std::move(*chain_tx_hash),
-        .status = *status,
-        .block_number = *block_number,
-        .transaction_index = *transaction_index,
-        .receipt = std::move(receipt)
-    };
+    BundleTxResult result = {.mempool_tx_id = std::move(*mempool_tx_id),
+                             .chain_tx_hash = std::move(*chain_tx_hash),
+                             .status = *status,
+                             .block_number = *block_number,
+                             .transaction_index = *transaction_index,
+                             .receipt = std::move(receipt)};
 
     return result;
 }

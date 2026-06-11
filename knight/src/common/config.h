@@ -110,7 +110,6 @@ private:
         return ec == std::errc{} && ptr == end && value > 0;
     }
 
-
     static std::optional<PoolConfig> parse_pool(const boost::json::object& json)
     {
         auto address = json_hex_bytes(json, "address", ADDRESS_LENGTH);
@@ -201,11 +200,11 @@ private:
     {
         const auto target_start = url.find('/', authority_start);
         const auto authority = target_start == std::string_view::npos
-            ? url.substr(authority_start)
-            : url.substr(authority_start, target_start - authority_start);
+                                   ? url.substr(authority_start)
+                                   : url.substr(authority_start, target_start - authority_start);
         auto target = target_start == std::string_view::npos
-            ? std::string{"/"}
-            : std::string{url.substr(target_start)};
+                          ? std::string{"/"}
+                          : std::string{url.substr(target_start)};
 
         if (authority.empty() || target.empty() || authority.find('@') != std::string_view::npos) {
             return std::nullopt;
@@ -217,19 +216,19 @@ private:
         };
     }
 
-    static std::optional<HostPort> parse_host_port(std::string_view authority, std::string_view default_port)
+    static std::optional<HostPort> parse_host_port(std::string_view authority,
+                                                   std::string_view default_port)
     {
         const auto colon = authority.find(':');
-        if (colon != std::string_view::npos && authority.find(':', colon + 1) != std::string_view::npos) {
+        if (colon != std::string_view::npos &&
+            authority.find(':', colon + 1) != std::string_view::npos) {
             return std::nullopt;
         }
 
-        auto host = colon == std::string_view::npos
-            ? std::string(authority)
-            : std::string(authority.substr(0, colon));
-        auto port = colon == std::string_view::npos
-            ? std::string(default_port)
-            : std::string(authority.substr(colon + 1));
+        auto host = colon == std::string_view::npos ? std::string(authority)
+                                                    : std::string(authority.substr(0, colon));
+        auto port = colon == std::string_view::npos ? std::string(default_port)
+                                                    : std::string(authority.substr(colon + 1));
 
         if (host.empty() || !is_valid_port(port)) {
             return std::nullopt;
@@ -244,7 +243,8 @@ private:
     static std::optional<Endpoint> parse_endpoint(std::string_view url, const SchemeInfo& scheme)
     {
         const auto scheme_end = url.find("://");
-        if (scheme_end == std::string_view::npos || to_lower(std::string(url.substr(0, scheme_end))) != scheme.scheme) {
+        if (scheme_end == std::string_view::npos ||
+            to_lower(std::string(url.substr(0, scheme_end))) != scheme.scheme) {
             return std::nullopt;
         }
 

@@ -15,11 +15,16 @@ namespace network
 std::string ws_source_state_to_string(WsSource::State state)
 {
     switch (state) {
-        case WsSource::State::STOPPED: return "STOPPED";
-        case WsSource::State::STARTING: return "STARTING";
-        case WsSource::State::RUNNING: return "RUNNING";
-        case WsSource::State::STOPPING: return "STOPPING";
-        case WsSource::State::FAILED: return "FAILED";
+    case WsSource::State::STOPPED:
+        return "STOPPED";
+    case WsSource::State::STARTING:
+        return "STARTING";
+    case WsSource::State::RUNNING:
+        return "RUNNING";
+    case WsSource::State::STOPPING:
+        return "STOPPING";
+    case WsSource::State::FAILED:
+        return "FAILED";
     }
     return "UNKNOWN";
 }
@@ -33,18 +38,18 @@ WsSource::WsSource(net::io_context& io_ctx,
                    message_handler_t on_message,
                    error_handler_t on_error,
                    state_handler_t on_state)
-    : m_io_ctx(io_ctx)
-    , m_resolver(net::make_strand(io_ctx))
-    , m_ssl_context(ssl::context::tls_client)
-    , m_reconnect_timer(io_ctx)
-    , m_use_tls(use_tls)
-    , m_verify_tls_peer(verify_tls_peer)
-    , m_host(std::move(host))
-    , m_port(std::move(port))
-    , m_target(std::move(target))
-    , m_on_message(std::move(on_message))
-    , m_on_error(std::move(on_error))
-    , m_on_state(std::move(on_state))
+    : m_io_ctx(io_ctx),
+      m_resolver(net::make_strand(io_ctx)),
+      m_ssl_context(ssl::context::tls_client),
+      m_reconnect_timer(io_ctx),
+      m_use_tls(use_tls),
+      m_verify_tls_peer(verify_tls_peer),
+      m_host(std::move(host)),
+      m_port(std::move(port)),
+      m_target(std::move(target)),
+      m_on_message(std::move(on_message)),
+      m_on_error(std::move(on_error)),
+      m_on_state(std::move(on_state))
 {
     if (m_use_tls) {
         beast::error_code ec;
@@ -66,7 +71,11 @@ void WsSource::start()
         return;
     }
 
-    log::info("WsSource", "starting... scheme={} host={} target={}", m_use_tls ? "wss" : "ws", m_host, m_target);
+    log::info("WsSource",
+              "starting... scheme={} host={} target={}",
+              m_use_tls ? "wss" : "ws",
+              m_host,
+              m_target);
     m_restart_requested = false;
     reset_stream();
     publish_state(State::STARTING);
@@ -139,17 +148,13 @@ void WsSource::reset_stream()
 void WsSource::do_resolve()
 {
     m_resolver.async_resolve(
-        m_host,
-        m_port,
-        beast::bind_front_handler(&WsSource::on_resolve, this));
+        m_host, m_port, beast::bind_front_handler(&WsSource::on_resolve, this));
 }
 
 void WsSource::do_read()
 {
     with_stream([this](auto& ws) {
-        ws.async_read(
-            m_buffer,
-            beast::bind_front_handler(&WsSource::on_read, this));
+        ws.async_read(m_buffer, beast::bind_front_handler(&WsSource::on_read, this));
     });
 }
 
@@ -166,9 +171,8 @@ void WsSource::do_close()
     }
 
     with_stream([this](auto& ws) {
-        ws.async_close(
-            websocket::close_code::normal,
-            beast::bind_front_handler(&WsSource::on_close, this));
+        ws.async_close(websocket::close_code::normal,
+                       beast::bind_front_handler(&WsSource::on_close, this));
     });
 }
 
@@ -176,16 +180,13 @@ void WsSource::do_ws_handshake()
 {
     with_stream([this](auto& ws) {
         ws.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
-        ws.set_option(websocket::stream_base::decorator(
-            [](websocket::request_type& req) {
-                req.set(beast::http::field::user_agent, "knight-ws-source");
-            }));
+        ws.set_option(websocket::stream_base::decorator([](websocket::request_type& req) {
+            req.set(beast::http::field::user_agent, "knight-ws-source");
+        }));
 
         const std::string host_header = m_host + ":" + m_port;
         ws.async_handshake(
-            host_header,
-            m_target,
-            beast::bind_front_handler(&WsSource::on_ws_handshake, this));
+            host_header, m_target, beast::bind_front_handler(&WsSource::on_ws_handshake, this));
     });
 }
 
@@ -199,21 +200,19 @@ void WsSource::on_resolve(beast::error_code ec, tcp::resolver::results_type resu
 
     log::debug("WsSource", "resolved host");
     if (m_use_tls) {
-        net::async_connect(
-            beast::get_lowest_layer(*m_tls_ws),
-            results,
-            [this](beast::error_code ec, const tcp::endpoint&) {
-                on_connect(ec);
-            });
+        net::async_connect(beast::get_lowest_layer(*m_tls_ws),
+                           results,
+                           [this](beast::error_code ec, const tcp::endpoint&) {
+                               on_connect(ec);
+                           });
         return;
     }
 
-    net::async_connect(
-        beast::get_lowest_layer(*m_plain_ws),
-        results,
-        [this](beast::error_code ec, const tcp::endpoint&) {
-            on_connect(ec);
-        });
+    net::async_connect(beast::get_lowest_layer(*m_plain_ws),
+                       results,
+                       [this](beast::error_code ec, const tcp::endpoint&) {
+                           on_connect(ec);
+                       });
 }
 
 void WsSource::on_connect(beast::error_code ec)
@@ -233,22 +232,23 @@ void WsSource::on_connect(beast::error_code ec)
 
     auto* native_tls = m_tls_ws->next_layer().native_handle();
     if (!SSL_set_tlsext_host_name(native_tls, m_host.c_str())) {
-        beast::error_code sni_ec(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category());
+        beast::error_code sni_ec(static_cast<int>(::ERR_get_error()),
+                                 net::error::get_ssl_category());
         log::error("WsSource", "TLS SNI setup failed: {}", sni_ec.message());
         fail(sni_ec, "tls_sni");
         return;
     }
 
     if (m_verify_tls_peer && !SSL_set1_host(native_tls, m_host.c_str())) {
-        beast::error_code host_ec(static_cast<int>(::ERR_get_error()), net::error::get_ssl_category());
+        beast::error_code host_ec(static_cast<int>(::ERR_get_error()),
+                                  net::error::get_ssl_category());
         log::error("WsSource", "TLS hostname verification setup failed: {}", host_ec.message());
         fail(host_ec, "tls_verify_host");
         return;
     }
 
     m_tls_ws->next_layer().async_handshake(
-        ssl::stream_base::client,
-        beast::bind_front_handler(&WsSource::on_tls_handshake, this));
+        ssl::stream_base::client, beast::bind_front_handler(&WsSource::on_tls_handshake, this));
 }
 
 void WsSource::on_tls_handshake(beast::error_code ec)

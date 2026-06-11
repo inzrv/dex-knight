@@ -35,15 +35,24 @@ enum class RestError
 inline std::string_view error_to_string(RestError error) noexcept
 {
     switch (error) {
-        case RestError::UNKNOWN_ERROR: return "UNKNOWN_ERROR";
-        case RestError::RESOLVE_ERROR: return "RESOLVE_ERROR";
-        case RestError::CONNECT_ERROR: return "CONNECT_ERROR";
-        case RestError::SSL_HANDSHAKE_ERROR: return "SSL_HANDSHAKE_ERROR";
-        case RestError::HTTP_WRITE_ERROR: return "HTTP_WRITE_ERROR";
-        case RestError::HTTP_READ_ERROR: return "HTTP_READ_ERROR";
-        case RestError::BAD_STATUS: return "BAD_STATUS";
-        case RestError::CONFLICT: return "CONFLICT";
-        case RestError::SHUTDOWN_ERROR: return "SHUTDOWN_ERROR";
+    case RestError::UNKNOWN_ERROR:
+        return "UNKNOWN_ERROR";
+    case RestError::RESOLVE_ERROR:
+        return "RESOLVE_ERROR";
+    case RestError::CONNECT_ERROR:
+        return "CONNECT_ERROR";
+    case RestError::SSL_HANDSHAKE_ERROR:
+        return "SSL_HANDSHAKE_ERROR";
+    case RestError::HTTP_WRITE_ERROR:
+        return "HTTP_WRITE_ERROR";
+    case RestError::HTTP_READ_ERROR:
+        return "HTTP_READ_ERROR";
+    case RestError::BAD_STATUS:
+        return "BAD_STATUS";
+    case RestError::CONFLICT:
+        return "CONFLICT";
+    case RestError::SHUTDOWN_ERROR:
+        return "SHUTDOWN_ERROR";
     }
 
     return "UNKNOWN_ERROR";
@@ -59,13 +68,16 @@ public:
                std::string port);
 
     std::expected<std::string, RestError> get(std::string_view target) const;
-    std::expected<std::string, RestError> post(std::string_view target, std::string_view body) const;
+    std::expected<std::string, RestError> post(std::string_view target,
+                                               std::string_view body) const;
 
 private:
     std::expected<std::string, RestError> get_plain(std::string_view target) const;
     std::expected<std::string, RestError> get_tls(std::string_view target) const;
-    std::expected<std::string, RestError> post_plain(std::string_view target, std::string_view body) const;
-    std::expected<std::string, RestError> post_tls(std::string_view target, std::string_view body) const;
+    std::expected<std::string, RestError> post_plain(std::string_view target,
+                                                     std::string_view body) const;
+    std::expected<std::string, RestError> post_tls(std::string_view target,
+                                                   std::string_view body) const;
 
 private:
     net::io_context& m_io_ctx;

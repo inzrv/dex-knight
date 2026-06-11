@@ -157,7 +157,8 @@ std::optional<uint64_t> json_hex_uint64(const boost::json::object& object, std::
     return parse_hex_quantity(*raw);
 }
 
-std::optional<intx::uint256> json_hex_uint256(const boost::json::object& object, std::string_view field)
+std::optional<intx::uint256> json_hex_uint256(const boost::json::object& object,
+                                              std::string_view field)
 {
     const auto raw = json_string(object, field);
     if (!raw) {
@@ -177,7 +178,9 @@ std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::stri
     return parse_hex_bytes(*raw);
 }
 
-std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::string_view field, size_t expected_size)
+std::optional<bytes> json_hex_bytes(const boost::json::object& object,
+                                    std::string_view field,
+                                    size_t expected_size)
 {
     auto parsed = json_hex_bytes(object, field);
     if (!parsed || parsed->size() != expected_size) {
@@ -187,9 +190,8 @@ std::optional<bytes> json_hex_bytes(const boost::json::object& object, std::stri
     return parsed;
 }
 
-std::optional<std::optional<uint64_t>> json_optional_hex_uint64(
-    const boost::json::object& object,
-    std::string_view field)
+std::optional<std::optional<uint64_t>> json_optional_hex_uint64(const boost::json::object& object,
+                                                                std::string_view field)
 {
     if (!object.if_contains(field) || object.at(field).is_null()) {
         return std::optional<uint64_t>{};
@@ -203,9 +205,8 @@ std::optional<std::optional<uint64_t>> json_optional_hex_uint64(
     return std::optional<uint64_t>{*parsed};
 }
 
-std::optional<std::optional<uint64_t>> json_optional_uint64(
-    const boost::json::object& object,
-    std::string_view field)
+std::optional<std::optional<uint64_t>> json_optional_uint64(const boost::json::object& object,
+                                                            std::string_view field)
 {
     if (!object.if_contains(field) || object.at(field).is_null()) {
         return std::optional<uint64_t>{};
@@ -220,8 +221,7 @@ std::optional<std::optional<uint64_t>> json_optional_uint64(
 }
 
 std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(
-    const boost::json::object& object,
-    std::string_view field)
+    const boost::json::object& object, std::string_view field)
 {
     if (!object.if_contains(field) || object.at(field).is_null()) {
         return std::optional<intx::uint256>{};
@@ -235,10 +235,9 @@ std::optional<std::optional<intx::uint256>> json_optional_hex_uint256(
     return std::optional<intx::uint256>{*parsed};
 }
 
-std::optional<std::optional<bytes>> json_optional_hex_bytes(
-    const boost::json::object& object,
-    std::string_view field,
-    size_t expected_size)
+std::optional<std::optional<bytes>> json_optional_hex_bytes(const boost::json::object& object,
+                                                            std::string_view field,
+                                                            size_t expected_size)
 {
     if (!object.if_contains(field) || object.at(field).is_null()) {
         return std::optional<bytes>{};
@@ -252,9 +251,8 @@ std::optional<std::optional<bytes>> json_optional_hex_bytes(
     return std::optional<bytes>{std::move(*parsed)};
 }
 
-std::optional<std::optional<std::string>> json_optional_string(
-    const boost::json::object& object,
-    std::string_view field)
+std::optional<std::optional<std::string>> json_optional_string(const boost::json::object& object,
+                                                               std::string_view field)
 {
     const auto* value = object.if_contains(field);
     if (value == nullptr || value->is_null()) {
@@ -267,7 +265,8 @@ std::optional<std::optional<std::string>> json_optional_string(
     return std::optional<std::string>{std::string(value->as_string().c_str())};
 }
 
-const boost::json::array* json_array(const boost::json::object& object, std::string_view field) noexcept
+const boost::json::array* json_array(const boost::json::object& object,
+                                     std::string_view field) noexcept
 {
     const auto* value = object.if_contains(field);
     if (!value || !value->is_array()) {
@@ -277,7 +276,8 @@ const boost::json::array* json_array(const boost::json::object& object, std::str
     return &value->as_array();
 }
 
-const boost::json::object* json_object(const boost::json::object& object, std::string_view field) noexcept
+const boost::json::object* json_object(const boost::json::object& object,
+                                       std::string_view field) noexcept
 {
     const auto* value = object.if_contains(field);
     if (!value || !value->is_object()) {

@@ -10,7 +10,8 @@
 namespace candidate
 {
 
-std::optional<PoolSnapshot> PoolSnapshot::from_json(const evm::Pool& pool, const boost::json::value& value)
+std::optional<PoolSnapshot> PoolSnapshot::from_json(const evm::Pool& pool,
+                                                    const boost::json::value& value)
 {
     if (!value.is_object()) {
         return std::nullopt;

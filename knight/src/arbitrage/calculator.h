@@ -11,10 +11,9 @@
 namespace arbitrage
 {
 
-[[nodiscard]] std::optional<Opportunity> find_arbitrage(
-    const candidate::StateSnapshot& state,
-    const candidate::Candidate& candidate,
-    const decoder::Swap& swap,
-    const Params& params);
+[[nodiscard]] std::optional<Opportunity> find_arbitrage(const candidate::StateSnapshot& state,
+                                                        const candidate::Candidate& candidate,
+                                                        const decoder::Swap& swap,
+                                                        const Params& params);
 
 } // namespace arbitrage
