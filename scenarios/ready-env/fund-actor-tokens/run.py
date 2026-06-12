@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from scenario_support import (  # noqa: E402
+    DEPLOYMENT_FILE,
+    ScenarioError,
+    TOKEN_DECIMALS,
+    deployment_role,
+    format_token_amount,
+    mint_token,
+    print_step,
+    require_running_deployment,
+    rpc,
+    token_balance,
+)
+
+TOKEN_AMOUNT = 1_000 * TOKEN_DECIMALS
+
+
+def main() -> int:
+    print_step("Checking existing local chain")
+    deployment = require_running_deployment()
+    rpc_url = deployment["rpcUrl"]
+    contracts = deployment["contracts"]
+    token_a = contracts["tokenA"]
+    token_b = contracts["tokenB"]
+    backrun = contracts["backrun"]
+    deployer_role = deployment_role(deployment, "deployer")
+    deployer_key = deployer_role["privateKey"]
+    victim_role = deployment_role(deployment, "victim")
+    victim = victim_role["address"]
+    bot_role = deployment_role(deployment, "bot")
+    bot = bot_role["address"]
+
+    print(f"Deployment file: {DEPLOYMENT_FILE}")
+    print(f"RPC URL:         {rpc_url}")
+    print(f"Victim address:  {victim}")
+    print(f"Bot address:     {bot}")
+    print(f"Backrun address: {backrun}")
+    print(f"TokenA address:  {token_a}")
+    print(f"TokenB address:  {token_b}")
+
+    before_victim_a = token_balance(rpc_url, token_a, victim)
+    before_victim_b = token_balance(rpc_url, token_b, victim)
+    before_bot_a = token_balance(rpc_url, token_a, bot)
+    before_bot_b = token_balance(rpc_url, token_b, bot)
+    before_backrun_b = token_balance(rpc_url, token_b, backrun)
+
+    print_step("Minting tokens")
+    rpc(rpc_url, "evm_setAutomine", [True])
+    try:
+        for recipient in [victim, bot]:
+            mint_token(rpc_url, deployer_key, token_a, recipient, TOKEN_AMOUNT, manage_automine=False)
+            mint_token(rpc_url, deployer_key, token_b, recipient, TOKEN_AMOUNT, manage_automine=False)
+        # Backrun contract only needs TokenB — it's the starting capital for B -> A -> B routes
+        mint_token(rpc_url, deployer_key, token_b, backrun, TOKEN_AMOUNT, manage_automine=False)
+    finally:
+        rpc(rpc_url, "evm_setAutomine", [False])
+
+    after_victim_a = token_balance(rpc_url, token_a, victim)
+    after_victim_b = token_balance(rpc_url, token_b, victim)
+    after_bot_a = token_balance(rpc_url, token_a, bot)
+    after_bot_b = token_balance(rpc_url, token_b, bot)
+    after_backrun_b = token_balance(rpc_url, token_b, backrun)
+
+    print_step("Checking balances")
+    for label, before_a, after_a, before_b, after_b in [
+        ("Victim", before_victim_a, after_victim_a, before_victim_b, after_victim_b),
+        ("Bot",    before_bot_a,    after_bot_a,    before_bot_b,    after_bot_b),
+    ]:
+        print(f"{label} TokenA before: {format_token_amount(before_a)}")
+        print(f"{label} TokenA after:  {format_token_amount(after_a)}")
+        print(f"{label} TokenB before: {format_token_amount(before_b)}")
+        print(f"{label} TokenB after:  {format_token_amount(after_b)}")
+        assert_balance_delta(f"{label} TokenA", before_a, after_a, TOKEN_AMOUNT)
+        assert_balance_delta(f"{label} TokenB", before_b, after_b, TOKEN_AMOUNT)
+
+    print(f"Backrun TokenB before: {format_token_amount(before_backrun_b)}")
+    print(f"Backrun TokenB after:  {format_token_amount(after_backrun_b)}")
+    assert_balance_delta("Backrun TokenB", before_backrun_b, after_backrun_b, TOKEN_AMOUNT)
+
+    print_step("Scenario complete")
+    print(f"Victim and Bot each received {format_token_amount(TOKEN_AMOUNT)} TokenA and TokenB.")
+    print(f"Backrun contract received {format_token_amount(TOKEN_AMOUNT)} TokenB.")
+    return 0
+
+
+def assert_balance_delta(label: str, before: int, after: int, expected_delta: int) -> None:
+    actual_delta = after - before
+    if actual_delta != expected_delta:
+        raise ScenarioError(
+            f"{label} balance delta expected {expected_delta}, got {actual_delta}"
+        )
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except ScenarioError as error:
+        print(f"\nScenario failed: {error}", file=sys.stderr)
+        raise SystemExit(1)

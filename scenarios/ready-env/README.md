@@ -17,7 +17,7 @@ Run from the repository root:
 
 ```shell
 scenarios/ready-env/actor-nonces/run.zsh
-scenarios/ready-env/fund-victim-tokens/run.zsh
+scenarios/ready-env/fund-actor-tokens/run.zsh
 scenarios/ready-env/approve-victim-tokens/run.zsh
 scenarios/ready-env/seed-pools/run.zsh
 scenarios/ready-env/victim-swap-pending/run.zsh
