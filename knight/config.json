@@ -2,6 +2,14 @@
   "builderRestUrl": "http://127.0.0.1:9001",
   "builderWsUrl": "ws://127.0.0.1:9001/ws/pending",
   "tlsVerifyPeer": true,
+  "backrun": {
+    "botAddress": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+    "contractAddress": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    "chainId": 31337,
+    "gas": 700000,
+    "maxFeePerGas": "0x77359400",
+    "maxPriorityFeePerGas": "0x1"
+  },
   "pools": [
     {
       "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",

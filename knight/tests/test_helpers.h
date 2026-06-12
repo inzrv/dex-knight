@@ -21,6 +21,8 @@ constexpr std::string_view kTokenAAddress = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 constexpr std::string_view kTokenBAddress = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 constexpr std::string_view kSenderAddress = "0xf0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0";
 constexpr std::string_view kMalformedAddress = "0x1111";
+constexpr std::string_view kBotAddress = "0x3333333333333333333333333333333333333333";
+constexpr std::string_view kBackrunAddress = "0x4444444444444444444444444444444444444444";
 
 constexpr intx::uint256 kTokenUnit{1'000'000'000'000'000'000ULL};
 

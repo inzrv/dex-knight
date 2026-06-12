@@ -30,6 +30,16 @@ struct PoolConfig final
     bytes token_b;
 };
 
+struct BackrunConfig final
+{
+    bytes bot_address;
+    bytes contract_address;
+    uint64_t chain_id{0};
+    uint64_t gas{700'000};
+    intx::uint256 max_fee_per_gas{2'000'000'000};
+    intx::uint256 max_priority_fee_per_gas{1};
+};
+
 struct Config final
 {
     bool from_json(const boost::json::object& json)
@@ -51,11 +61,17 @@ struct Config final
             return false;
         }
 
+        auto parsed_backrun = parse_backrun(json);
+        if (!parsed_backrun) {
+            return false;
+        }
+
         builder_rest_url = *builder_rest_url_json;
         builder_rest_endpoint = *rest_endpoint;
         builder_ws_url = *builder_ws_url_json;
         builder_ws_endpoint = *ws_endpoint;
         pools = std::move(*parsed_pools);
+        backrun = std::move(*parsed_backrun);
         tls_verify_peer = json_bool(json, "tlsVerifyPeer").value_or(true);
         return true;
     }
@@ -76,6 +92,7 @@ struct Config final
     Endpoint builder_ws_endpoint;
     bool tls_verify_peer{true};
     std::vector<PoolConfig> pools;
+    BackrunConfig backrun;
 
 private:
     struct SchemeInfo final
@@ -150,6 +167,46 @@ private:
         }
 
         return pools;
+    }
+
+    static std::optional<BackrunConfig> parse_backrun(const boost::json::object& json)
+    {
+        const auto* backrun_json = json_object(json, "backrun");
+        if (backrun_json == nullptr) {
+            return std::nullopt;
+        }
+
+        auto bot_address = json_hex_bytes(*backrun_json, "botAddress", kAddressLength);
+        auto contract_address = json_hex_bytes(*backrun_json, "contractAddress", kAddressLength);
+        auto chain_id = json_uint64(*backrun_json, "chainId");
+        auto gas = json_optional_uint64(*backrun_json, "gas");
+        auto max_fee_per_gas = json_optional_hex_uint256(*backrun_json, "maxFeePerGas");
+        auto max_priority_fee_per_gas =
+            json_optional_hex_uint256(*backrun_json, "maxPriorityFeePerGas");
+        if (!bot_address || !contract_address || !chain_id || !gas || !max_fee_per_gas ||
+            !max_priority_fee_per_gas) {
+            return std::nullopt;
+        }
+
+        BackrunConfig config{
+            .bot_address = std::move(*bot_address),
+            .contract_address = std::move(*contract_address),
+            .chain_id = *chain_id,
+        };
+
+        if (*gas) {
+            config.gas = **gas;
+        }
+
+        if (*max_fee_per_gas) {
+            config.max_fee_per_gas = **max_fee_per_gas;
+        }
+
+        if (*max_priority_fee_per_gas) {
+            config.max_priority_fee_per_gas = **max_priority_fee_per_gas;
+        }
+
+        return std::optional<BackrunConfig>{std::move(config)};
     }
 
     static std::optional<SchemeInfo> parse_ws_scheme(std::string_view scheme_raw)
