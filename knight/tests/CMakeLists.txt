@@ -1,6 +1,7 @@
 add_executable(knight_tests
     arbitrage_calculator_test.cpp
     decoder_test.cpp
+    encoder_test.cpp
     test_helpers.h
 )
 

@@ -8,3 +8,4 @@ using bytes_view = solabi::bytes_view;
 
 inline constexpr unsigned int kWordSize{solabi::kWordSize};
 inline constexpr unsigned int kAddressLength{solabi::kAddressLength};
+inline constexpr unsigned int kSelectorLength{4};

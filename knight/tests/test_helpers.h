@@ -20,6 +20,7 @@ constexpr std::string_view kPool2Address = "0x2222222222222222222222222222222222
 constexpr std::string_view kTokenAAddress = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 constexpr std::string_view kTokenBAddress = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 constexpr std::string_view kSenderAddress = "0xf0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0";
+constexpr std::string_view kMalformedAddress = "0x1111";
 
 constexpr intx::uint256 kTokenUnit{1'000'000'000'000'000'000ULL};
 

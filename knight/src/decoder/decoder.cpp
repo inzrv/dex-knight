@@ -9,18 +9,16 @@
 namespace decoder
 {
 
-static constexpr size_t kSelectorSize = 4;
-
 std::optional<Swap> decode_swap(const candidate::Candidate& candidate)
 {
     const auto& input = candidate.tx.input;
 
-    if (input.size() <= kSelectorSize) {
+    if (input.size() <= kSelectorLength) {
         return std::nullopt;
     }
 
-    const bytes_view selector{input.data(), kSelectorSize};
-    const bytes_view calldata{input.data() + kSelectorSize, input.size() - kSelectorSize};
+    const bytes_view selector{input.data(), kSelectorLength};
+    const bytes_view calldata{input.data() + kSelectorLength, input.size() - kSelectorLength};
 
     try {
         switch (candidate.swap_kind) {
