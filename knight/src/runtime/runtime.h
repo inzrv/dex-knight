@@ -33,6 +33,7 @@ private:
 
     std::unique_ptr<candidate::CandidateSource> m_candidate_source;
     std::unique_ptr<simulation::Simulator> m_simulator;
+    std::unique_ptr<backrun::TxComposer> m_backrun_tx_composer;
 };
 
 } // namespace runtime

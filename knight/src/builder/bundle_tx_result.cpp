@@ -72,12 +72,14 @@ std::optional<BundleTxResult> BundleTxResult::from_json(const boost::json::value
         receipt = std::move(*parsed_receipt);
     }
 
-    BundleTxResult result = {.mempool_tx_id = std::move(*mempool_tx_id),
-                             .chain_tx_hash = std::move(*chain_tx_hash),
-                             .status = *status,
-                             .block_number = *block_number,
-                             .transaction_index = *transaction_index,
-                             .receipt = std::move(receipt)};
+    BundleTxResult result{
+        .mempool_tx_id = std::move(*mempool_tx_id),
+        .chain_tx_hash = std::move(*chain_tx_hash),
+        .status = *status,
+        .block_number = *block_number,
+        .transaction_index = *transaction_index,
+        .receipt = std::move(receipt)
+    };
 
     return result;
 }

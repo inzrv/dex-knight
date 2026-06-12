@@ -50,21 +50,23 @@ std::optional<Receipt> Receipt::from_json(const boost::json::value& value)
         return std::nullopt;
     }
 
-    Receipt receipt = {.type = static_cast<uint8_t>(*type),
-                       .status = *status,
-                       .cumulative_gas_used = *cumulative_gas_used,
-                       .logs = std::move(logs),
-                       .logs_bloom = std::move(*logs_bloom),
-                       .transaction_hash = std::move(*transaction_hash),
-                       .transaction_index = *transaction_index,
-                       .block_hash = std::move(*block_hash),
-                       .block_number = *block_number,
-                       .gas_used = *gas_used,
-                       .effective_gas_price = *effective_gas_price,
-                       .from = std::move(*from),
-                       .to = std::move(*to),
-                       .contract_address = std::move(*contract_address),
-                       .block_timestamp = *block_timestamp};
+    Receipt receipt{
+        .type = static_cast<uint8_t>(*type),
+        .status = *status,
+        .cumulative_gas_used = *cumulative_gas_used,
+        .logs = std::move(logs),
+        .logs_bloom = std::move(*logs_bloom),
+        .transaction_hash = std::move(*transaction_hash),
+        .transaction_index = *transaction_index,
+        .block_hash = std::move(*block_hash),
+        .block_number = *block_number,
+        .gas_used = *gas_used,
+        .effective_gas_price = *effective_gas_price,
+        .from = std::move(*from),
+        .to = std::move(*to),
+        .contract_address = std::move(*contract_address),
+        .block_timestamp = *block_timestamp
+    };
 
     return receipt;
 }

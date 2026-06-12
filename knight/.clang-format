@@ -40,6 +40,8 @@ AllowShortLambdasOnASingleLine: None
 AllowShortLoopsOnASingleLine: false
 
 BinPackArguments: false
+BreakAfterOpenBracketBracedList: true
+BreakBeforeCloseBracketBracedList: true
 BinPackParameters: false
 BreakTemplateDeclarations: Yes
 Cpp11BracedListStyle: true

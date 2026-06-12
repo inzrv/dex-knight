@@ -29,8 +29,9 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    const std::string config_payload{std::istreambuf_iterator<char>{config_file},
-                                     std::istreambuf_iterator<char>{}};
+    const std::string config_payload{
+        std::istreambuf_iterator<char>{config_file}, std::istreambuf_iterator<char>{}
+    };
 
     try {
         Config config;

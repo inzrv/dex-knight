@@ -1,17 +1,14 @@
 #pragma once
 
+#include "builder/bundle.h"
 #include "builder/bundle_sim_result.h"
 #include "builder/errors.h"
 #include "builder/rest_client.h"
-#include "candidate/candidate.h"
 #include "common/config.h"
 
 #include <boost/asio/io_context.hpp>
 
-#include <cstdint>
 #include <expected>
-#include <optional>
-#include <string>
 
 namespace simulation
 {
@@ -22,8 +19,7 @@ public:
     Simulator(Config config, boost::asio::io_context& io_ctx);
 
     std::expected<builder::BundleSimulationResult, builder::Error> simulate(
-        const candidate::Candidate& candidate,
-        std::optional<uint64_t> block_number = std::nullopt) const;
+        const builder::Bundle& bundle) const;
 
 private:
     builder::RestClient m_builder_rest_client;

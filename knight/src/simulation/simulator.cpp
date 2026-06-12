@@ -1,6 +1,5 @@
 #include "simulation/simulator.h"
 
-#include "builder/bundle.h"
 #include "utils/utils.h"
 
 #include <utility>
@@ -13,12 +12,8 @@ Simulator::Simulator(Config config, boost::asio::io_context& io_ctx)
 {}
 
 std::expected<builder::BundleSimulationResult, builder::Error> Simulator::simulate(
-    const candidate::Candidate& candidate, std::optional<uint64_t> block_number) const
+    const builder::Bundle& bundle) const
 {
-    builder::Bundle bundle;
-    bundle.block_number = block_number;
-    bundle.transactions.emplace_back(builder::MempoolTxRef{candidate.tx.mempool_tx_id});
-
     auto raw_response = m_builder_rest_client.simulate_bundle(bundle);
     if (!raw_response) {
         return std::unexpected(raw_response.error());

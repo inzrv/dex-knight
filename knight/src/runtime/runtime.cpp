@@ -1,6 +1,8 @@
 #include "runtime/runtime.h"
 
 #include "arbitrage/calculator.h"
+#include "backrun/errors.h"
+#include "builder/bundle.h"
 #include "builder/errors.h"
 #include "candidate/candidate.h"
 #include "candidate/errors.h"
@@ -42,9 +44,16 @@ Runtime::Runtime(RuntimeFactory& factory)
     auto components = factory.create(m_io_ctx);
     m_candidate_source = std::move(components.candidate_source);
     m_simulator = std::move(components.simulator);
+    m_backrun_tx_composer = std::move(components.backrun_tx_composer);
 
-    if (!m_candidate_source || !m_simulator) {
+    if (!m_candidate_source || !m_simulator || !m_backrun_tx_composer) {
         throw std::invalid_argument("runtime factory returned incomplete components");
+    }
+
+    auto initialized = m_backrun_tx_composer->initialize();
+    if (!initialized) {
+        throw std::runtime_error("failed to initialize backrun tx composer: " +
+                                 std::string(backrun::error_to_string(initialized.error())));
     }
 
     log::info("Runtime", "Runtime initialized with all components");
@@ -139,44 +148,6 @@ void Runtime::run_core_loop()
             },
             *swap);
 
-        auto simulation = m_simulator->simulate(current_candidate, state->block_number);
-        if (!simulation) {
-            if (simulation.error() == builder::Error::CANDIDATE_NOT_PENDING) {
-                log::info(
-                    "Runtime",
-                    "candidate simulation skipped: mempool_tx_id={} already mined or canceled",
-                    current_candidate.tx.mempool_tx_id);
-            } else {
-                log::warn("Runtime",
-                          "candidate simulation failed: {}",
-                          builder::error_to_string(simulation.error()));
-            }
-            continue;
-        }
-
-        log::info("Runtime",
-                  "candidate simulation result: status={} simulated={} tx_count={}",
-                  builder::bundle_status_to_string(simulation->status),
-                  simulation->simulated,
-                  simulation->transactions.size());
-
-        for (const auto& tx_result : simulation->transactions) {
-            log::info("Runtime",
-                      "candidate simulation tx result: mempool_tx_id={} chain_tx_hash={} status={}",
-                      tx_result.mempool_tx_id.value_or("-"),
-                      hex_data(tx_result.chain_tx_hash),
-                      builder::bundle_tx_status_to_string(tx_result.status));
-        }
-
-        if (simulation->status != builder::BundleStatus::INCLUDED) {
-            log::debug(
-                "Runtime",
-                "arbitrage calculation skipped: candidate simulation status={} mempool_tx_id={}",
-                builder::bundle_status_to_string(simulation->status),
-                current_candidate.tx.mempool_tx_id);
-            continue;
-        }
-
         const auto arbitrage_params = make_default_arbitrage_params();
         auto opportunity =
             arbitrage::find_arbitrage(*state, current_candidate, *swap, arbitrage_params);
@@ -201,6 +172,58 @@ void Runtime::run_core_loop()
                   hex_quantity(opportunity->expected_amount_out_a),
                   hex_quantity(opportunity->expected_amount_out_b),
                   hex_quantity(opportunity->expected_profit_b));
+
+        auto backrun_tx = m_backrun_tx_composer->compose(*opportunity);
+        if (!backrun_tx) {
+            log::warn("Runtime",
+                      "backrun transaction composition failed: {}",
+                      backrun::error_to_string(backrun_tx.error()));
+            continue;
+        }
+
+        log::info("Runtime",
+                  "backrun transaction composed: nonce={} to={} input_size={} gas={}",
+                  backrun_tx->nonce,
+                  backrun_tx->to ? hex_data(*backrun_tx->to) : std::string{"none"},
+                  backrun_tx->input.size(),
+                  backrun_tx->gas);
+
+        builder::Bundle bundle{
+            .block_number = state->block_number,
+            .transactions = {
+                builder::MempoolTxRef{current_candidate.tx.mempool_tx_id}, std::move(*backrun_tx)
+            }
+        };
+
+        auto simulation = m_simulator->simulate(bundle);
+        if (!simulation) {
+            if (simulation.error() == builder::Error::CANDIDATE_NOT_PENDING) {
+                log::info("Runtime",
+                          "backrun bundle simulation skipped: mempool_tx_id={} already mined or "
+                          "canceled",
+                          current_candidate.tx.mempool_tx_id);
+            } else {
+                log::warn("Runtime",
+                          "backrun bundle simulation failed: {}",
+                          builder::error_to_string(simulation.error()));
+            }
+            continue;
+        }
+
+        log::info("Runtime",
+                  "backrun bundle simulation result: status={} simulated={} tx_count={}",
+                  builder::bundle_status_to_string(simulation->status),
+                  simulation->simulated,
+                  simulation->transactions.size());
+
+        for (const auto& tx_result : simulation->transactions) {
+            log::info("Runtime",
+                      "backrun bundle simulation tx result: mempool_tx_id={} chain_tx_hash={} "
+                      "status={}",
+                      tx_result.mempool_tx_id.value_or("-"),
+                      hex_data(tx_result.chain_tx_hash),
+                      builder::bundle_tx_status_to_string(tx_result.status));
+        }
     }
 
     log::info("Runtime", "core loop stopped");

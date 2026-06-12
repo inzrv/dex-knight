@@ -1,5 +1,6 @@
 #pragma once
 
+#include "backrun/tx_composer.h"
 #include "candidate/candidate_source.h"
 #include "common/config.h"
 #include "simulation/simulator.h"
@@ -15,6 +16,7 @@ struct RuntimeComponents
 {
     std::unique_ptr<candidate::CandidateSource> candidate_source;
     std::unique_ptr<simulation::Simulator> simulator;
+    std::unique_ptr<backrun::TxComposer> backrun_tx_composer;
 };
 
 class RuntimeFactory final

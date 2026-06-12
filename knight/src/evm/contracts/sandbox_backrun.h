@@ -25,8 +25,8 @@ struct SandboxBackrun
                                              solabi::uint_t<256>,
                                              solabi::uint_t<256>>;
 
-        inline static const bytes kTopic{
-            solabi::from_hex("0xf10a5f8a7c6a4693ccca3ed17669da824f6a42e85101b8039370bdb4a85f98ca")};
+        inline static const bytes kTopic{solabi::from_hex(
+            "0xf10a5f8a7c6a4693ccca3ed17669da824f6a42e85101b8039370bdb4a85f98ca")};
 
         bytes buy_pool;
         bytes sell_pool;
