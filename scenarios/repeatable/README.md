@@ -4,7 +4,7 @@ Repeatable scenarios are safe to run multiple times against the same local envir
 They start or reuse the local chain and block builder when needed, unless a scenario says otherwise.
 
 They may still mutate chain or builder state as part of their checks.
-Most repeatable scenarios exercise the chain and Forest Gate directly; they do
+Most repeatable scenarios exercise the chain and builder directly; they do
 not require Knight to be running.
 
 Run from the repository root:

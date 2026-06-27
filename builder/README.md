@@ -1,6 +1,6 @@
-# Forest Gate
+# Builder
 
-Forest Gate is the local block builder for DEX Knight. It keeps an in-memory
+The builder is the local block builder for DEX Knight. It keeps an in-memory
 public mempool, accepts private bundles, talks to Anvil, and exposes small chain
 gateway endpoints for Knight.
 
@@ -39,7 +39,7 @@ there is no persisted bundle history API yet.
 From the repository root:
 
 ```shell
-services/block-builder/bin/start-local.zsh
+builder/bin/start-local.zsh
 ```
 
 The script creates `.venv` if needed, installs Python dependencies if needed, starts the
@@ -49,14 +49,14 @@ a log file, and checks `/health`.
 Runtime files:
 
 ```text
-services/block-builder/runtime/block-builder.local.pid
-services/block-builder/runtime/block-builder.local.log
+builder/runtime/block-builder.local.pid
+builder/runtime/block-builder.local.log
 ```
 
 Stop and clean the local service:
 
 ```shell
-services/block-builder/bin/cleanup-local.zsh
+builder/bin/cleanup-local.zsh
 ```
 
 ## Planned Later

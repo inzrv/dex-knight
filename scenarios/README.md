@@ -25,6 +25,6 @@ tail -f knight/runtime/knight.local.log
 scenarios/ready-env/bin/cleanup.zsh
 ```
 
-`start-clean.zsh` starts the chain, block builder, and Knight. The pending
-victim swap scenario leaves the swap in Forest Gate's public mempool; Knight can
+`start-clean.zsh` starts the chain, builder, and Knight. The pending
+victim swap scenario leaves the swap in the builder public mempool; Knight can
 then calculate, simulate, submit, and log the backrun bundle.

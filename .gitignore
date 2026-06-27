@@ -24,9 +24,9 @@ dist/
 *.egg-info/
 
 # Local service runtime files
-services/block-builder/runtime/*.log
-services/block-builder/runtime/*.pid
-!services/block-builder/runtime/.gitkeep
+builder/runtime/*.log
+builder/runtime/*.pid
+!builder/runtime/.gitkeep
 
 # Local Knight runtime files
 knight/runtime/*.log

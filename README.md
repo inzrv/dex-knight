@@ -10,7 +10,7 @@
 
 DEX Knight is a DEX arbitrage bot project with a local execution environment
 for developing and testing the full workflow safely. The repository includes
-the `blockchain` sandbox EVM network, **Forest Gate**, a local block builder,
+the `blockchain` sandbox EVM network, a local `builder`,
 smart contracts, and integration scenarios that exercise victim swaps, bundles,
 simulations, and backruns.
 
@@ -18,7 +18,7 @@ simulations, and backruns.
 
 The local stack can run the first end-to-end backrun loop:
 
-- Forest Gate accepts public mempool transactions, streams pending updates,
+- The builder accepts public mempool transactions, streams pending updates,
   exposes chain head/nonce/`eth_call` gateway endpoints, simulates bundles on an
   Anvil snapshot, and mines submitted bundles at the current head.
 - Knight watches configured sandbox pools, snapshots pool reserves on each new
@@ -33,7 +33,7 @@ The local stack can run the first end-to-end backrun loop:
 
 - `blockchain/` - local EVM network, ERC-20 tokens, AMM pools, backrun
   executor, and Foundry deployment scripts.
-- `services/block-builder/` - **Forest Gate**: local block builder service with
+- `builder/` - local `builder` service with
   public mempool, private bundle, simulation, and chain gateway APIs.
 - `knight/` - **Knight**: C++ arbitrage bot runtime.
 - `scenarios/` - integration scenarios grouped by environment lifecycle.
@@ -62,18 +62,18 @@ Stop and clean the local blockchain sandbox:
 blockchain/bin/cleanup-local.zsh
 ```
 
-### Forest Gate
+### Builder
 
 Start the local block builder:
 
 ```shell
-services/block-builder/bin/start-local.zsh
+builder/bin/start-local.zsh
 ```
 
 Stop and clean the local block builder:
 
 ```shell
-services/block-builder/bin/cleanup-local.zsh
+builder/bin/cleanup-local.zsh
 ```
 
 ### Knight
@@ -133,6 +133,6 @@ only the chain and block builder.
 
 - `blockchain/README.md` - local chain, contracts, deployment output, and
   Foundry usage.
-- `services/block-builder/README.md` - Forest Gate setup, service runtime, and
+- `builder/README.md` - builder setup, service runtime, and
   API examples.
 - `knight/README.md` - Knight bot build, config, and runtime scripts.

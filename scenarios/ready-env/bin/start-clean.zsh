@@ -8,7 +8,7 @@ REPO_ROOT="${SCRIPT_DIR:h:h:h}"
 
 "${SCRIPT_DIR}/cleanup.zsh"
 "${REPO_ROOT}/blockchain/bin/deploy-local.zsh"
-"${REPO_ROOT}/services/block-builder/bin/start-local.zsh"
+"${REPO_ROOT}/builder/bin/start-local.zsh"
 
 if [[ "${START_KNIGHT:-1}" == "1" ]]; then
   "${REPO_ROOT}/knight/bin/start-local.zsh"

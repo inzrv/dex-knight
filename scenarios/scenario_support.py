@@ -12,7 +12,7 @@ from urllib.request import Request, urlopen
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
-SERVICE_DIR = REPO_ROOT / "services" / "block-builder"
+SERVICE_DIR = REPO_ROOT / "builder"
 BLOCKCHAIN_DIR = REPO_ROOT / "blockchain"
 DEPLOYMENT_FILE = BLOCKCHAIN_DIR / "deployments" / "local.json"
 ENV_FILE = BLOCKCHAIN_DIR / "config" / "local.anvil.env"
@@ -563,7 +563,7 @@ def public_transaction_payload(
     }
 
 
-# Builds a block-builder transaction payload for a contract call.
+# Builds a builder transaction payload for a contract call.
 def contract_transaction_payload(
     rpc_url: str,
     chain_id: int,
@@ -583,7 +583,7 @@ def contract_transaction_payload(
     )
 
 
-# Builds a block-builder transaction payload for an ERC-20 transfer.
+# Builds a builder transaction payload for an ERC-20 transfer.
 def token_transfer_payload(
     rpc_url: str,
     chain_id: int,

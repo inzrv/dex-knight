@@ -18,14 +18,14 @@ pid_file_running() {
 
 environment_running() {
   pid_file_running "${REPO_ROOT}/blockchain/deployments/anvil.local.pid" && return 0
-  pid_file_running "${REPO_ROOT}/services/block-builder/runtime/block-builder.local.pid" && return 0
+  pid_file_running "${REPO_ROOT}/builder/runtime/block-builder.local.pid" && return 0
   pid_file_running "${REPO_ROOT}/knight/runtime/knight.local.pid" && return 0
   return 1
 }
 
 cleanup_environment() {
   "${REPO_ROOT}/knight/bin/cleanup-local.zsh" || true
-  "${REPO_ROOT}/services/block-builder/bin/cleanup-local.zsh" || true
+  "${REPO_ROOT}/builder/bin/cleanup-local.zsh" || true
   "${REPO_ROOT}/blockchain/bin/cleanup-local.zsh" || true
 }
 

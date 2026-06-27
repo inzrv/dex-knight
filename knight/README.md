@@ -2,7 +2,7 @@
 
 Knight is the C++23 arbitrage bot runtime for DEX Knight.
 
-In the current local MVP it connects to Forest Gate, keeps a coherent view of
+In the current local MVP it connects to the builder, keeps a coherent view of
 the watched sandbox pools, reacts to pending victim swaps, calculates a simple
 two-pool backrun opportunity, simulates the ordered bundle, and submits the
 bundle when simulation succeeds.
@@ -70,13 +70,13 @@ model yet.
 }
 ```
 
-`builderRestUrl` points to the Forest Gate HTTP API. `builderWsUrl` points to
+`builderRestUrl` points to the builder HTTP API. `builderWsUrl` points to
 the pending transaction stream. Use `http://`/`ws://` locally and
 `https://`/`wss://` for TLS endpoints. `tlsVerifyPeer` is optional and defaults
 to `true`.
 
 `backrun.botAddress` is the transaction sender and `SandboxBackrun` operator.
-Knight fetches its nonce from Forest Gate at startup. `backrun.contractAddress`
+Knight fetches its nonce from the builder at startup. `backrun.contractAddress`
 is the deployed `SandboxBackrun` executor. Gas and EIP-1559 fee fields are used
 for the direct private backrun transaction.
 
