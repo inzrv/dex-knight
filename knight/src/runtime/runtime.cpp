@@ -224,6 +224,54 @@ void Runtime::run_core_loop()
                       hex_data(tx_result.chain_tx_hash),
                       builder::bundle_tx_status_to_string(tx_result.status));
         }
+
+        if (simulation->status != builder::BundleStatus::INCLUDED) {
+            log::warn("Runtime",
+                      "backrun bundle submission skipped: simulation status={} mempool_tx_id={}",
+                      builder::bundle_status_to_string(simulation->status),
+                      current_candidate.tx.mempool_tx_id);
+            continue;
+        }
+
+        auto submission = m_simulator->submit(bundle);
+        if (!submission) {
+            if (submission.error() == builder::Error::CANDIDATE_NOT_PENDING) {
+                log::info("Runtime",
+                          "backrun bundle submission skipped: mempool_tx_id={} already mined or "
+                          "canceled",
+                          current_candidate.tx.mempool_tx_id);
+            } else {
+                log::warn("Runtime",
+                          "backrun bundle submission failed: {}",
+                          builder::error_to_string(submission.error()));
+            }
+            continue;
+        }
+
+        m_backrun_tx_composer->mark_nonce_used();
+
+        log::info("Runtime",
+                  "backrun bundle submission result: status={} tx_count={}",
+                  builder::bundle_status_to_string(submission->status),
+                  submission->transactions.size());
+
+        for (const auto& tx_result : submission->transactions) {
+            log::info("Runtime",
+                      "backrun bundle submission tx result: mempool_tx_id={} chain_tx_hash={} "
+                      "status={}",
+                      tx_result.mempool_tx_id.value_or("-"),
+                      hex_data(tx_result.chain_tx_hash),
+                      builder::bundle_tx_status_to_string(tx_result.status));
+        }
+
+        if (submission->status != builder::BundleStatus::INCLUDED) {
+            log::warn("Runtime",
+                      "backrun bundle submission finished with non-included status: {} "
+                      "mempool_tx_id={}",
+                      builder::bundle_status_to_string(submission->status),
+                      current_candidate.tx.mempool_tx_id);
+            continue;
+        }
     }
 
     log::info("Runtime", "core loop stopped");

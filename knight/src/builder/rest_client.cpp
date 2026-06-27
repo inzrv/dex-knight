@@ -64,6 +64,12 @@ std::expected<std::string, Error> RestClient::simulate_bundle(const Bundle& bund
     return post_with_retry(kBundleSimulationTarget, body, "bundle simulation");
 }
 
+std::expected<std::string, Error> RestClient::submit_bundle(const Bundle& bundle) const
+{
+    const auto body = boost::json::serialize(bundle.to_json());
+    return post_with_retry(kBundleSubmissionTarget, body, "bundle submission");
+}
+
 std::expected<std::string, Error> RestClient::get_with_retry(std::string_view target,
                                                              std::string_view label) const
 {

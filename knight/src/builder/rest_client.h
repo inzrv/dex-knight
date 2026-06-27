@@ -25,6 +25,7 @@ public:
     std::expected<std::string, Error> request_chain_call(const boost::json::object& payload) const;
     std::expected<uint64_t, Error> request_nonce(const bytes& address) const;
     std::expected<std::string, Error> simulate_bundle(const Bundle& bundle) const;
+    std::expected<std::string, Error> submit_bundle(const Bundle& bundle) const;
 
 private:
     std::expected<std::string, Error> get_with_retry(std::string_view target,
@@ -42,6 +43,7 @@ private:
     static constexpr std::string_view kChainCallTarget{"/chain/call"};
     static constexpr std::string_view kChainNonceTarget{"/chain/nonce"};
     static constexpr std::string_view kBundleSimulationTarget{"/private/bundle/simulate"};
+    static constexpr std::string_view kBundleSubmissionTarget{"/private/bundle"};
     static constexpr int kMaxAttempts{3};
     static constexpr std::chrono::milliseconds kBaseBackoff{200};
 };
