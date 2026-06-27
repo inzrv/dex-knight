@@ -2,6 +2,8 @@
 
 This scenario checks a simple backrun bundle over two sandbox pools.
 It requires a clean local environment because it expects deterministic pool and backrun balances.
+The scenario constructs the private bundle itself; it does not rely on Knight's
+runtime loop.
 
 ## Steps
 

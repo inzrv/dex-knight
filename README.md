@@ -10,14 +10,29 @@
 
 DEX Knight is a DEX arbitrage bot project with a local execution environment
 for developing and testing the full workflow safely. The repository includes
-**Dark Forest**, a sandbox EVM network, **Forest Gate**, a local block builder,
+the `blockchain` sandbox EVM network, **Forest Gate**, a local block builder,
 smart contracts, and integration scenarios that exercise victim swaps, bundles,
 simulations, and backruns.
 
+## Current MVP
+
+The local stack can run the first end-to-end backrun loop:
+
+- Forest Gate accepts public mempool transactions, streams pending updates,
+  exposes chain head/nonce/`eth_call` gateway endpoints, simulates bundles on an
+  Anvil snapshot, and mines submitted bundles at the current head.
+- Knight watches configured sandbox pools, snapshots pool reserves on each new
+  block, decodes pending sandbox swaps, calculates a two-pool `B -> A -> B`
+  opportunity, composes `SandboxBackrun.executeBackrun`, simulates the ordered
+  `[victim, backrun]` bundle, and submits it when simulation succeeds.
+- Scenarios prepare deterministic local liquidity, approvals, actor balances,
+  pending victim swaps, bundle simulation, bundle submission, and manual
+  one-shot backruns.
+
 ## Modules
 
-- `blockchain/` - **Dark Forest**: local EVM network, ERC-20 tokens, AMM
-  pools, backrun executor, and Foundry deployment scripts.
+- `blockchain/` - local EVM network, ERC-20 tokens, AMM pools, backrun
+  executor, and Foundry deployment scripts.
 - `services/block-builder/` - **Forest Gate**: local block builder service with
   public mempool, private bundle, simulation, and chain gateway APIs.
 - `knight/` - **Knight**: C++ arbitrage bot runtime.
@@ -33,7 +48,7 @@ simulations, and backruns.
 
 ## Local Commands
 
-### Dark Forest
+### Blockchain
 
 Start or redeploy the local blockchain sandbox:
 
@@ -99,9 +114,24 @@ scenarios/ready-env/single-bundle-tx/run.zsh
 scenarios/ready-env/bin/cleanup.zsh
 ```
 
+Run the current Knight backrun loop locally:
+
+```shell
+scenarios/ready-env/bin/start-clean.zsh
+scenarios/ready-env/fund-actor-tokens/run.zsh
+scenarios/ready-env/approve-victim-tokens/run.zsh
+scenarios/ready-env/seed-pools/run.zsh
+scenarios/ready-env/victim-swap-pending/run.zsh
+tail -f knight/runtime/knight.local.log
+scenarios/ready-env/bin/cleanup.zsh
+```
+
+`start-clean.zsh` starts Knight by default. Use `START_KNIGHT=0` when testing
+only the chain and block builder.
+
 ## More Detail
 
-- `blockchain/README.md` - Dark Forest local chain, contracts, deployment output, and
+- `blockchain/README.md` - local chain, contracts, deployment output, and
   Foundry usage.
 - `services/block-builder/README.md` - Forest Gate setup, service runtime, and
   API examples.

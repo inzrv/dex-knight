@@ -2,6 +2,8 @@
 
 This scenario checks that bundle simulation produces execution results without
 changing the real chain state.
+It exercises `POST /private/bundle/simulate`, including the explicit
+`blockNumber` guard used by Knight before submitting a real bundle.
 
 ## Steps
 

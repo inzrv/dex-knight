@@ -2,6 +2,8 @@
 
 This scenario reads every currently pending transaction from the builder public
 mempool and sends them to the chain as one private bundle.
+It is useful after pending-transaction experiments when you want the builder
+mempool to become empty again without restarting services.
 
 It does not require every transaction to succeed at EVM level. Reverted
 transactions are acceptable; the goal is that they stop being pending in the

@@ -11,6 +11,7 @@ deployments can produce different addresses.
 GET  /health
 GET  /ping
 GET  /chain/head
+GET  /chain/nonce/{address}
 POST /chain/call
 POST /public/tx
 GET  /public/tx/{mempoolTxId}
@@ -75,6 +76,27 @@ Expected response:
   "parentHash": "0xdef...",
   "timestamp": "0x663f5a10",
   "baseFeePerGas": "0x3b9aca00"
+}
+```
+
+## `GET /chain/nonce/{address}`
+
+Description: returns the current transaction count for an address as seen by
+Anvil. Knight uses this endpoint to initialize the bot sender nonce before
+composing private backrun transactions.
+
+Example request:
+
+```shell
+curl http://127.0.0.1:9001/chain/nonce/0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc
+```
+
+Expected response:
+
+```json
+{
+  "address": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+  "nonce": "0x0"
 }
 ```
 

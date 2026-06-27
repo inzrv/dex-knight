@@ -10,3 +10,21 @@ Pick the group first, then run the scenario inside it.
 - [`one-shot/`](one-shot/README.md): own a fresh local environment and clean it up afterward.
 
 Run commands from the repository root unless a scenario says otherwise.
+
+## Current Knight Flow
+
+For the current bot MVP, use ready-env scenarios:
+
+```shell
+scenarios/ready-env/bin/start-clean.zsh
+scenarios/ready-env/fund-actor-tokens/run.zsh
+scenarios/ready-env/approve-victim-tokens/run.zsh
+scenarios/ready-env/seed-pools/run.zsh
+scenarios/ready-env/victim-swap-pending/run.zsh
+tail -f knight/runtime/knight.local.log
+scenarios/ready-env/bin/cleanup.zsh
+```
+
+`start-clean.zsh` starts the chain, block builder, and Knight. The pending
+victim swap scenario leaves the swap in Forest Gate's public mempool; Knight can
+then calculate, simulate, submit, and log the backrun bundle.

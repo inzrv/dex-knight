@@ -3,6 +3,8 @@
 This scenario prepares both deployed AMM pools with equal `TokenA` / `TokenB`
 liquidity.
 Each run adds another `1,000 TokenA` and `1,000 TokenB` to each pool.
+Knight snapshots these reserves through the builder `POST /chain/call` endpoint
+on new blocks.
 
 ## Steps
 

@@ -1,6 +1,8 @@
 # Fund Actor Tokens Scenario
 
 This scenario mints sandbox tokens directly to the victim and bot wallets.
+It also gives `SandboxBackrun` TokenB starting capital for Knight's current
+`B -> A -> B` backrun route.
 
 ## Steps
 

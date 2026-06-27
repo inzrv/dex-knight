@@ -1,19 +1,20 @@
-# Dark Forest
+# Blockchain
 
-Dark Forest is the local EVM sandbox for DEX Knight. This directory contains
+`blockchain/` is the local EVM sandbox for DEX Knight. This directory contains
 the chain tooling, Solidity contracts, deployment scripts, and local deployment
 outputs.
 
 For now, it is intentionally small. The goal is to create a reproducible local
-environment where the future C++ bot can interact with contracts without using
-a public RPC endpoint or spending real gas.
+environment where the C++ bot can interact with contracts without using a
+public RPC endpoint or spending real gas.
 
 Current contents:
 
 - `src/tokens/` - minimal ERC-20 contracts used by the sandbox.
 - `src/dexes/` - sandbox AMM pool contracts used by swap and arbitrage
   scenarios.
-- `src/backrun/` - sandbox backrun executor contracts for bundle-driven arbitrage experiments.
+- `src/backrun/` - sandbox backrun executor contracts for bundle-driven
+  arbitrage experiments.
 - `config/local.anvil.env` - local chain accounts, keys, RPC URL, and Anvil
   parameters.
 - `bin/deploy-local.zsh` - starts or reuses a local Anvil chain, builds contracts, deploys the sandbox tokens and pools, checks them, and writes deployment output.
@@ -154,9 +155,9 @@ Role settings:
 
 - `DEPLOYER_ADDRESS` / `DEPLOYER_PRIVATE_KEY` - deploys contracts and is the
   current token minter.
-- `VICTIM_ADDRESS` / `VICTIM_PRIVATE_KEY` - reserved for future victim swap
-  scenarios.
-- `BOT_ADDRESS` / `BOT_PRIVATE_KEY` - reserved for the future C++ bot.
+- `VICTIM_ADDRESS` / `VICTIM_PRIVATE_KEY` - used by victim swap scenarios.
+- `BOT_ADDRESS` / `BOT_PRIVATE_KEY` - used by Knight as the local backrun
+  transaction sender and `SandboxBackrun` operator.
 - `TREASURY_ADDRESS` - reserved for future profit collection.
 
 These keys are deterministic Anvil development keys. They must never be used on
@@ -175,11 +176,15 @@ Current DEX contracts:
 - `SandboxDex` - minimal constant-product AMM with `TokenA` / `TokenB`
   reserves, 0.3% swap fee, bootstrap liquidity, and exact-input swaps.
 - `Pool1` - first sandbox pool instance for local scenarios.
-- `Pool2` - second sandbox pool instance for local scenarios and future arbitrage setups.
+- `Pool2` - second sandbox pool instance for local scenarios and current
+  two-pool arbitrage setups.
 
 Current backrun contracts:
 
-- `SandboxBackrun` - executes a simple `B -> A` swap in one pool followed by `A -> B` in another pool, then reverts if the realized `TokenB` profit is below a caller-provided minimum.
+- `SandboxBackrun` - executes a simple `B -> A` swap in one pool followed by
+  `A -> B` in another pool, then reverts if the realized `TokenB` profit is
+  below a caller-provided minimum. It emits `BackrunExecuted` with the selected
+  pools, input, realized outputs, and profit.
 
 The contracts avoid external dependencies for now, so the sandbox can compile
 without installing packages.

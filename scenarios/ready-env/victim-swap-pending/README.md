@@ -2,6 +2,8 @@
 
 This scenario submits one victim `swapExactAForB` transaction to `Pool1` through
 the builder public mempool and deliberately does not mine a block.
+With Knight running against a valid pool snapshot, this pending transaction is
+the trigger for the current simulate-and-submit backrun loop.
 
 ## Steps
 

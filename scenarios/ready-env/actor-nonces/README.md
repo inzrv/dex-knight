@@ -2,6 +2,8 @@
 
 This scenario checks the block-builder nonce endpoint for deployment actors.
 It is read-only: it does not mine blocks, submit transactions, or mutate mempool state.
+Knight uses the same endpoint to initialize the bot sender nonce before building
+private backrun transactions.
 
 ## Steps
 
